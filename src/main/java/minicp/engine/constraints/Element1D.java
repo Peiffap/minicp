@@ -10,41 +10,45 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 
 package minicp.engine.constraints;
 
 import minicp.cp.Factory;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.Constraint;
 import minicp.engine.core.IntVar;
-import minicp.reversible.ReversibleInt;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.NotImplementedException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+/**
+ *
+ * Element Constraint modeling {@code array[y] = z}
+ *
+ */
+public class Element1D extends AbstractConstraint {
 
-public class Element1D extends Constraint {
+    private final int[] t;
+    private final IntVar y;
+    private final IntVar z;
 
     /**
-     * T[y] = z
-     * @param T
-     * @param y
-     * @param z
+     * Creates an element constraint {@code array[y] = z}
+     *
+     * @param array the array to index
+     * @param y the index variable
+     * @param z the result variable
      */
-    public Element1D(int[] T, IntVar y, IntVar z) {
+    public Element1D(int[] array, IntVar y, IntVar z) {
         super(y.getSolver());
-        // TODO if Element1D extends Element2D
-        throw new NotImplementedException("Element1D");
+        this.t = array;
+        this.y = y;
+        this.z = z;
     }
 
     @Override
-    public void post() throws InconsistencyException {
-        // TODO (if not extending Element2D)
-        throw new NotImplementedException("Element1D");
-
+    public void post() {
+         throw new NotImplementedException("Element1D");
     }
 }

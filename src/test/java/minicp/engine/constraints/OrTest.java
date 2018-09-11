@@ -10,32 +10,33 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.BoolVar;
 import minicp.engine.core.Solver;
+import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Test;
 
+import static minicp.cp.BranchingScheme.firstFail;
 import static minicp.cp.Factory.*;
-import static minicp.cp.Heuristics.firstFail;
 import static org.junit.Assert.*;
 
 
-public class OrTest {
+public class OrTest extends SolverTest {
 
     @Test
     public void or1() {
-
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             BoolVar[] x = new BoolVar[]{makeBoolVar(cp), makeBoolVar(cp), makeBoolVar(cp), makeBoolVar(cp)};
             cp.post(new Or(x));
 
@@ -60,11 +61,14 @@ public class OrTest {
     public void or2() {
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             BoolVar[] x = new BoolVar[]{makeBoolVar(cp), makeBoolVar(cp), makeBoolVar(cp), makeBoolVar(cp)};
             cp.post(new Or(x));
 
-            SearchStatistics stats = makeDfs(cp, firstFail(x)).onSolution(() -> {
+
+            DFSearch dfs = makeDfs(cp, firstFail(x));
+
+            dfs.onSolution(() -> {
                         int nTrue = 0;
                         for (BoolVar xi : x) {
                             if (xi.isTrue()) nTrue++;
@@ -72,11 +76,15 @@ public class OrTest {
                         assertTrue(nTrue > 0);
 
                     }
-            ).start();
-            assertEquals(15, stats.nSolutions);
+            );
+
+            SearchStatistics stats = dfs.solve();
+
+            assertEquals(15, stats.numberOfSolutions());
 
         } catch (InconsistencyException e) {
             fail("should not fail");
+
         } catch (NotImplementedException e) {
             NotImplementedExceptionAssume.fail(e);
         }

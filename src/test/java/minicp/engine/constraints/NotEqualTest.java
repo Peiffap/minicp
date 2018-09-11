@@ -10,39 +10,41 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
-import minicp.util.InconsistencyException;
+import minicp.util.exception.InconsistencyException;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
 import static minicp.cp.Factory.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 
-public class NotEqualTest {
+public class NotEqualTest extends SolverTest {
 
     @Test
     public void notEqualTest() {
-        Solver cp  = makeSolver();
+        Solver cp = solverFactory.get();
 
-        IntVar x = makeIntVar(cp,10);
-        IntVar y = makeIntVar(cp,10);
+        IntVar x = makeIntVar(cp, 10);
+        IntVar y = makeIntVar(cp, 10);
 
         try {
-            cp.post(notEqual(x,y));
+            cp.post(notEqual(x, y));
 
-            equal(x,6);
+            equal(x, 6);
 
             assertFalse(y.contains(6));
-            assertEquals(9,y.getSize());
+            assertEquals(9, y.size());
 
         } catch (InconsistencyException e) {
-            assert(false);
+            assert (false);
         }
         assertFalse(y.contains(6));
     }

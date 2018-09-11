@@ -15,21 +15,23 @@
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
+import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Assume;
 import org.junit.Test;
 
 import java.util.Random;
 
+import static minicp.cp.BranchingScheme.firstFail;
 import static minicp.cp.Factory.*;
-import static minicp.cp.Heuristics.firstFail;
 import static org.junit.Assert.*;
 
-public class ShortTableTest {
+public class ShortTableTest extends SolverTest {
 
 
     private int[][] randomTuples(Random rand, int arity, int nTuples, int minvalue, int maxvalue) {
@@ -43,7 +45,8 @@ public class ShortTableTest {
     @Test
     public void simpleTest0() {
         try {
-            Solver cp = makeSolver();
+
+            Solver cp = solverFactory.get();
             IntVar[] x = makeIntVarArray(cp, 2, 1);
             int[][] table = new int[][]{{0, 0}};
             cp.post(new ShortTableCT(x, table, -1));
@@ -58,8 +61,9 @@ public class ShortTableTest {
 
     @Test
     public void simpleTest3() {
+
         try {
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar[] x = makeIntVarArray(cp, 3, 12);
             int[][] table = new int[][]{{0, 0, 2},
                     {3, 5, 7},
@@ -67,22 +71,23 @@ public class ShortTableTest {
                     {1, 2, 3}};
             cp.post(new ShortTableCT(x, table, 0));
 
-            assertEquals(12, x[0].getSize());
-            assertEquals(12, x[1].getSize());
-            assertEquals(4, x[2].getSize());
+            assertEquals(12, x[0].size());
+            assertEquals(12, x[1].size());
+            assertEquals(4, x[2].size());
 
-            assertEquals(0, x[0].getMin());
-            assertEquals(11, x[0].getMax());
-            assertEquals(0, x[1].getMin());
-            assertEquals(11, x[1].getMax());
-            assertEquals(2, x[2].getMin());
-            assertEquals(10, x[2].getMax());
+            assertEquals(0, x[0].min());
+            assertEquals(11, x[0].max());
+            assertEquals(0, x[1].min());
+            assertEquals(11, x[1].max());
+            assertEquals(2, x[2].min());
+            assertEquals(10, x[2].max());
 
 
         } catch (InconsistencyException e) {
             fail("should not fail");
+
         } catch (NotImplementedException e) {
-            Assume.assumeNoException(e);
+            NotImplementedExceptionAssume.fail(e);
         }
     }
 
@@ -110,34 +115,34 @@ public class ShortTableTest {
         SearchStatistics statsAlgo;
 
         try {
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar[] x = makeIntVarArray(cp, 5, 9);
             cp.post(allDifferent(x));
             cp.post(new ShortTableDecomp(new IntVar[]{x[0], x[1], x[2]}, t1, star));
             cp.post(new ShortTableDecomp(new IntVar[]{x[2], x[3], x[4]}, t2, star));
             cp.post(new ShortTableDecomp(new IntVar[]{x[0], x[2], x[4]}, t3, star));
-            statsDecomp = makeDfs(cp, firstFail(x)).start();
+            statsDecomp = makeDfs(cp, firstFail(x)).solve();
         } catch (InconsistencyException e) {
             statsDecomp = null;
         }
 
         try {
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar[] x = makeIntVarArray(cp, 5, 9);
             cp.post(allDifferent(x));
             cp.post(new ShortTableCT(new IntVar[]{x[0], x[1], x[2]}, t1, star));
             cp.post(new ShortTableCT(new IntVar[]{x[2], x[3], x[4]}, t2, star));
             cp.post(new ShortTableCT(new IntVar[]{x[0], x[2], x[4]}, t3, star));
-            statsAlgo = makeDfs(cp, firstFail(x)).start();
+            statsAlgo = makeDfs(cp, firstFail(x)).solve();
         } catch (InconsistencyException e) {
             statsAlgo = null;
         }
 
         assertTrue((statsDecomp == null && statsAlgo == null) || (statsDecomp != null && statsAlgo != null));
         if (statsDecomp != null) {
-            assertEquals(statsDecomp.nSolutions, statsAlgo.nSolutions);
-            assertEquals(statsDecomp.nFailures, statsAlgo.nFailures);
-            assertEquals(statsDecomp.nNodes, statsAlgo.nNodes);
+            assertEquals(statsDecomp.numberOfSolutions(), statsAlgo.numberOfSolutions());
+            assertEquals(statsDecomp.numberOfFailures(), statsAlgo.numberOfFailures());
+            assertEquals(statsDecomp.numberOfNodes(), statsAlgo.numberOfNodes());
         }
     }
 }

@@ -10,101 +10,78 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.search;
 
-import minicp.engine.core.IntVar;
-import minicp.engine.core.Solver;
-import minicp.reversible.ReversibleInt;
-import java.util.Arrays;
-
-import static minicp.cp.Factory.makeSolver;
-import static minicp.search.Selector.*;
-
-import minicp.reversible.Trail;
-import minicp.util.Counter;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.state.StateInt;
+import minicp.state.StateManager;
+import minicp.state.StateManagerTest;
 import minicp.util.NotImplementedExceptionAssume;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import org.junit.Test;
-import static minicp.search.Selector.*;
-import static minicp.cp.Factory.*;
+
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static minicp.cp.BranchingScheme.EMPTY;
+import static minicp.cp.BranchingScheme.branch;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
-public class DFSearchTest {
+public class DFSearchTest extends StateManagerTest {
+
+
 
     @Test
     public void testExample1() {
-        Trail tr = new Trail();
-        ReversibleInt i = new ReversibleInt(tr,0);
-        int [] values = new int[3];
+        StateManager sm = stateFactory.get();
+        StateInt i = sm.makeStateInt(0);
+        int[] values = new int[3];
 
-        DFSearch dfs = new DFSearch(tr,() -> {
-            if (i.getValue() >= values.length)
-                return TRUE;
+        DFSearch dfs = new DFSearch(sm, () -> {
+            if (i.value() >= values.length)
+                return EMPTY;
             else return branch(
-                    ()-> { // left branch
-                        values[i.getValue()] = 0;
+                    () -> { // left branch
+                        values[i.value()] = 0;
                         i.increment();
                     },
-                    ()-> { // right branch
-                        values[i.getValue()] = 1;
+                    () -> { // right branch
+                        values[i.value()] = 1;
                         i.increment();
                     }
             );
         });
 
 
-        SearchStatistics stats = dfs.start();
+        SearchStatistics stats = dfs.solve();
 
-        assert(stats.nSolutions == 8);
-        assert(stats.nFailures == 0);
-        assert(stats.nNodes == (8+4+2));
+        assertEquals(8,stats.numberOfSolutions());
+        assertEquals (0,stats.numberOfFailures());
+        assertEquals (8 + 4 + 2,stats.numberOfNodes());
     }
 
-    @Test
-    public void testExample2() {
-        Solver cp = makeSolver();
-        IntVar[] values = makeIntVarArray(cp,3,2);
-
-        DFSearch dfs = new DFSearch(cp.getTrail(),() -> {
-            int sel = -1;
-            for(int i = 0 ; i < values.length;i++)
-                if (values[i].getSize() > 1 && sel == -1)
-                    sel = i;
-            final int i = sel;
-            if (i == -1)
-                return TRUE;
-            else return branch(()-> equal(values[i],0),
-                    ()-> equal(values[i],1));
-        });
-
-
-        SearchStatistics stats = dfs.start();
-
-        assert(stats.nSolutions == 8);
-        assert(stats.nFailures == 0);
-        assert(stats.nNodes == (8+4+2));
-    }
 
     @Test
     public void testExample3() {
-        Trail tr = new Trail();
-        ReversibleInt i = new ReversibleInt(tr,0);
-        int [] values = new int[3];
+        StateManager sm = stateFactory.get();
+        StateInt i = sm.makeStateInt(0);
+        int[] values = new int[3];
 
-        DFSearch dfs = new DFSearch(tr,() -> {
-            if (i.getValue() >= values.length)
-                return TRUE;
+        DFSearch dfs = new DFSearch(sm, () -> {
+            if (i.value() >= values.length)
+                return EMPTY;
             else return branch(
-                    ()-> { // left branch
-                        values[i.getValue()] = 1;
+                    () -> { // left branch
+                        values[i.value()] = 1;
                         i.increment();
                     },
-                    ()-> { // right branch
-                        values[i.getValue()] = 0;
+                    () -> { // right branch
+                        values[i.value()] = 0;
                         i.increment();
                     }
             );
@@ -112,163 +89,126 @@ public class DFSearchTest {
 
 
         dfs.onSolution(() -> {
-            assert(Arrays.stream(values).allMatch(v -> v == 1));
+            assert (Arrays.stream(values).allMatch(v -> v == 1));
         });
 
 
-        SearchStatistics stats = dfs.start(stat -> stat.nSolutions >= 1);
+        SearchStatistics stats = dfs.solve(stat -> stat.numberOfSolutions() >= 1);
 
-        assert(stats.nSolutions == 1);
+        assertEquals (1,stats.numberOfSolutions());
     }
-
-
 
 
     @Test
     public void testDFS() {
-        Trail tr = new Trail();
-        ReversibleInt i = new ReversibleInt(tr,0);
-        boolean [] values = new boolean[4];
+        StateManager sm = stateFactory.get();
+        StateInt i = sm.makeStateInt(0);
+        boolean[] values = new boolean[4];
 
-        Counter nSols = new Counter();
+        AtomicInteger nSols = new AtomicInteger(0);
 
 
-        DFSearch dfs = new DFSearch(tr,() -> {
-            if (i.getValue() >= values.length)
-                return TRUE;
-            else return branch (
-                    ()-> {
+        DFSearch dfs = new DFSearch(sm, () -> {
+            if (i.value() >= values.length)
+                return EMPTY;
+            else return branch(
+                    () -> {
                         // left branch
-                        values[i.getValue()] = false;
+                        values[i.value()] = false;
                         i.increment();
                     },
-                    ()-> {
+                    () -> {
                         // right branch
-                        values[i.getValue()] = true;
+                        values[i.value()] = true;
                         i.increment();
                     }
             );
         });
 
         dfs.onSolution(() -> {
-            nSols.incr();
+            nSols.incrementAndGet();
         });
 
 
+        SearchStatistics stats = dfs.solve();
 
-        SearchStatistics stats = dfs.start();
 
-
-        assert(nSols.getValue() == 16);
-        assert(stats.nSolutions == 16);
-        assert(stats.nFailures == 0);
-        assert(stats.nNodes == (16+8+4+2));
+        assertEquals(16, nSols.get());
+        assertEquals(16, stats.numberOfSolutions());
+        assertEquals(0, stats.numberOfFailures());
+        assertEquals((16 + 8 + 4 + 2), stats.numberOfNodes());
 
     }
 
     @Test
     public void testDFSSearchLimit() {
-        Trail tr = new Trail();
-        ReversibleInt i = new ReversibleInt(tr,0);
-        boolean [] values = new boolean[4];
+        StateManager sm = stateFactory.get();
 
-        DFSearch dfs = new DFSearch(tr,() -> {
-            if (i.getValue() >= values.length) {
-                return branch(() -> {throw new InconsistencyException();});
-            }
-            else return branch (
-                    ()-> {
+        StateInt i = sm.makeStateInt(0);
+        boolean[] values = new boolean[4];
+
+        DFSearch dfs = new DFSearch(sm, () -> {
+            if (i.value() >= values.length) {
+                return branch(() -> {
+                    throw new InconsistencyException();
+                });
+            } else return branch(
+                    () -> {
                         // left branch
-                        values[i.getValue()] = false;
+                        values[i.value()] = false;
                         i.increment();
                     },
-                    ()-> {
+                    () -> {
                         // right branch
-                        values[i.getValue()] = true;
+                        values[i.value()] = true;
                         i.increment();
                     }
             );
         });
 
-        Counter nFails = new Counter();
-        dfs.onFail(() -> {
-            nFails.incr();
-        });
+
 
 
         // stop search after 2 solutions
-        SearchStatistics stats = dfs.start(stat -> stat.nFailures >= 3);
+        SearchStatistics stats = dfs.solve(stat -> stat.numberOfFailures() >= 3);
 
-        assert(stats.nSolutions == 0);
-        assert(stats.nFailures == 3);
+        assertEquals (0,stats.numberOfSolutions());
+        assertEquals (3,stats.numberOfFailures());
 
     }
 
 
     @Test
     public void testDeepDFS() {
-        Trail tr = new Trail();
-        ReversibleInt i = new ReversibleInt(tr,0);
-        boolean [] values = new boolean[10000];
+        StateManager sm = stateFactory.get();
+        StateInt i = sm.makeStateInt(0);
+        boolean[] values = new boolean[10000];
 
-        DFSearch dfs = new DFSearch(tr,() -> {
-            if (i.getValue() >= values.length) {
-                return TRUE;
-            }
-            else return branch (
-                    ()-> {
+        DFSearch dfs = new DFSearch(sm, () -> {
+            if (i.value() >= values.length) {
+                return EMPTY;
+            } else return branch(
+                    () -> {
                         // left branch
-                        values[i.getValue()] = false;
+                        values[i.value()] = false;
                         i.increment();
                     },
-                    ()-> {
+                    () -> {
                         // right branch
-                        values[i.getValue()] = true;
+                        values[i.value()] = true;
                         i.increment();
                     }
             );
         });
         try {
             // stop search after 1 solutions (only left most branch)
-            SearchStatistics stats = dfs.start(stat -> stat.nSolutions >= 1);
-            assert(stats.nSolutions == 1);
+            SearchStatistics stats = dfs.solve(stat -> stat.numberOfSolutions() >= 1);
+            assertEquals (1,stats.numberOfSolutions());
         } catch (NotImplementedException e) {
             NotImplementedExceptionAssume.fail(e);
         }
 
     }
-
-
-	@Test
-    public void testStopExpandWhenFailure() {
-        // ensures that when some constraints fail on a given node, we do not visit corresponding child nodes
-        Trail tr = new Trail();
-        ReversibleInt i = new ReversibleInt(tr,0);
-        boolean [] values = new boolean[2];
-
-        DFSearch dfs = new DFSearch(tr,() -> {
-            if (i.getValue() >= values.length || i.getValue() < 0) {
-                return branch(() -> {throw new InconsistencyException();});
-            }
-            else return branch (
-                    ()-> {
-                        // left branch
-                        values[i.getValue()] = false;
-                        i.setValue(-1);
-                    },
-                    ()-> {
-                        // right branch
-                        values[i.getValue()] = true;
-                        i.increment();
-                    }
-            );
-        });
-        SearchStatistics stats = dfs.start(stat -> stat.nNodes >= 8);
-
-        // if we do not search deeper when there is a failure, 7 nodes only must be visited
-        assert(stats.nNodes == 7);
-    }
-
 
 
 }

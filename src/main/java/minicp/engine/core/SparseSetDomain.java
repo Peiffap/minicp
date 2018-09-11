@@ -10,97 +10,137 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.core;
 
-import minicp.reversible.Trail;
-import minicp.reversible.ReversibleSparseSet;
-import minicp.util.InconsistencyException;
-import static minicp.util.InconsistencyException.INCONSISTENCY;
+import minicp.state.StateManager;
+import minicp.state.StateSparseSet;
 
 
-public class SparseSetDomain extends IntDomain {
-    private ReversibleSparseSet domain;
-    private int offset;
+/**
+ * Implementation of a domain with a sparse-set
+ */
+public class SparseSetDomain implements IntDomain {
+    private StateSparseSet domain;
 
 
-    public SparseSetDomain(Trail trail, int min, int max) {
-        offset = min;
-        domain = new ReversibleSparseSet(trail, max-min+1);
+    public SparseSetDomain(StateManager sm, int min, int max) {
+        domain = new StateSparseSet(sm, max - min + 1, min);
     }
 
-    public int getMin() {
-        return domain.getMin() + offset;
+    @Override
+    public int fillArray(int[] dest) {
+        return domain.fillArray(dest);
     }
 
-    public int getMax() {
-        return domain.getMax() + offset;
+    @Override
+    public int min() {
+        return domain.min();
     }
 
-    public int getSize() {
-        return domain.getSize();
+    @Override
+    public int max() {
+        return domain.max();
     }
 
+    @Override
+    public int size() {
+        return domain.size();
+    }
+
+    @Override
     public boolean contains(int v) {
-        return domain.contains(v - offset);
+        return domain.contains(v);
     }
 
+    @Override
     public boolean isBound() {
-        return domain.getSize() == 1;
+        return domain.size() == 1;
     }
 
-    public void remove(int v, DomainListener x) throws InconsistencyException {
-        if (domain.contains(v - offset)) {
-            boolean maxChanged = getMax() == v;
-            boolean minChanged = getMin() == v;
-            domain.remove(v - offset);
-            if (domain.getSize() == 0) throw INCONSISTENCY;
-            x.change(domain.getSize());
-            if (maxChanged) x.removeAbove(domain.getSize());
-            if (minChanged) x.removeBelow(domain.getSize());
-            if (domain.getSize() == 1) x.bind();
+    @Override
+    public void remove(int v, DomainListener l) {
+        if (domain.contains(v)) {
+            boolean maxChanged = max() == v;
+            boolean minChanged = min() == v;
+            domain.remove(v);
+            if (domain.size() == 0)
+                l.empty();
+            l.change();
+            if (maxChanged) l.changeMax();
+            if (minChanged) l.changeMin();
+            if (domain.size() == 1) l.bind();
         }
     }
 
-    public void removeAllBut(int v, DomainListener x) throws InconsistencyException {
-        if (domain.contains(v - offset)) {
-            if (domain.getSize() != 1) {
-                boolean maxChanged = getMax() != v;
-                boolean minChanged = getMin() != v;
-                domain.removeAllBut(v - offset);
-                x.bind();
-                x.change(domain.getSize());
-                if (maxChanged) x.removeAbove(domain.getSize());
-                if (minChanged) x.removeBelow(domain.getSize());
+    @Override
+    public void removeAllBut(int v, DomainListener l) {
+        if (domain.contains(v)) {
+            if (domain.size() != 1) {
+                boolean maxChanged = max() != v;
+                boolean minChanged = min() != v;
+                domain.removeAllBut(v);
+                if (domain.size() == 0)
+                    l.empty();
+                l.bind();
+                l.change();
+                if (maxChanged) l.changeMax();
+                if (minChanged) l.changeMin();
+            }
+        } else {
+            domain.removeAll();
+            l.empty();
+        }
+    }
+
+    @Override
+    public void removeBelow(int value, DomainListener l) {
+        if (domain.min() < value) {
+            domain.removeBelow(value);
+            switch (domain.size()) {
+                case 0:
+                    l.empty();
+                    break;
+                case 1:
+                    l.bind();
+                default:
+                    l.changeMin();
+                    l.change();
+                    break;
             }
         }
-        else {
-            domain.removeAll();
-            throw InconsistencyException.INCONSISTENCY;
+    }
+
+    @Override
+    public void removeAbove(int value, DomainListener l) {
+        if (domain.max() > value) {
+            domain.removeAbove(value);
+            switch (domain.size()) {
+                case 0:
+                    l.empty();
+                    break;
+                case 1:
+                    l.bind();
+                default:
+                    l.changeMax();
+                    l.change();
+                    break;
+            }
         }
     }
 
-    public int removeBelow(int value, DomainListener x) throws InconsistencyException {
-        if (domain.getMin() + offset < value) {
-            domain.removeBelow(value - offset);
-            x.removeBelow(domain.getSize());
-            x.change(domain.getSize());
-            if (domain.getSize() == 1) x.bind();
-        }
-        if (domain.getSize() == 0) throw INCONSISTENCY;
-        else return domain.getMin() + offset;
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("{");
+        for (int i = min(); i <= max() - 1; i++)
+            if (contains((i)))
+                b.append(i).append(',');
+        if (size() > 0) b.append(max());
+        b.append("}");
+        return b.toString();
     }
 
-    public int removeAbove(int value, DomainListener x) throws InconsistencyException {
-        if (domain.getMax() + offset > value) {
-            domain.removeAbove(value - offset);
-            x.removeAbove(domain.getSize());
-            x.change(domain.getSize());
-            if (domain.getSize() == 1) x.bind();
-        }
-        if (domain.getSize() == 0) throw INCONSISTENCY;
-        else return domain.getMax() + offset;
-    }
 }

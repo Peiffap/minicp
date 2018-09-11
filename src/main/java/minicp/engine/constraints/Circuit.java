@@ -10,55 +10,62 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 
 package minicp.engine.constraints;
 
-import static minicp.cp.Factory.*;
-import minicp.engine.core.Constraint;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.reversible.ReversibleInt;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.state.StateInt;
+import minicp.util.exception.NotImplementedException;
 
-public class Circuit extends Constraint {
+import static minicp.cp.Factory.allDifferent;
 
-    private final IntVar [] x;
-    private final ReversibleInt [] dest;
-    private final ReversibleInt [] orig;
-    private final ReversibleInt [] lengthToDest;
+/**
+ * Hamiltonian Circuit Constraint with a successor model
+ */
+public class Circuit extends AbstractConstraint {
+
+    private final IntVar[] x;
+    private final StateInt[] dest;
+    private final StateInt[] orig;
+    private final StateInt[] lengthToDest;
 
     /**
-     * x represents an Hamiltonian circuit on the cities {0..x.length-1}
-     * where x[i] is the city visited after city i
-     * @param x
+     * Creates an Hamiltonian Circuit Constraint
+     * with a successor model.
+     *
+     * @param x the variables representing the successor array that is
+     *          {@code x[i]} is the city visited after city i
      */
-    public Circuit(IntVar [] x) {
+    public Circuit(IntVar[] x) {
         super(x[0].getSolver());
+        assert (x.length > 0);
         this.x = x;
-        dest = new ReversibleInt[x.length];
-        orig = new ReversibleInt[x.length];
-        lengthToDest = new ReversibleInt[x.length];
+        dest = new StateInt[x.length];
+        orig = new StateInt[x.length];
+        lengthToDest = new StateInt[x.length];
         for (int i = 0; i < x.length; i++) {
-            dest[i] = new ReversibleInt(cp.getTrail(),i);
-            orig[i] = new ReversibleInt(cp.getTrail(),i);
-            lengthToDest[i] = new ReversibleInt(cp.getTrail(),0);
+            dest[i] = getSolver().getStateManager().makeStateInt(i);
+            orig[i] = getSolver().getStateManager().makeStateInt(i);
+            lengthToDest[i] = getSolver().getStateManager().makeStateInt(0);
         }
     }
 
 
     @Override
-    public void post() throws InconsistencyException {
-        cp.post(allDifferent(x));
-        throw new NotImplementedException("Circuit");
+    public void post() {
+        getSolver().post(allDifferent(x));
         // TODO
         // Hint: use x[i].whenBind(...) to call the bind
+         throw new NotImplementedException("Circuit");
     }
 
 
-    private void bind(int i) throws InconsistencyException {
-        throw new NotImplementedException("Circuit");
+    private void bind(int i) {
+        // TODO
+         throw new NotImplementedException("Circuit");
     }
 }

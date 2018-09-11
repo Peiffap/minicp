@@ -10,59 +10,60 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Test;
 
+import static minicp.cp.BranchingScheme.firstFail;
+import static minicp.cp.Factory.makeDfs;
 import static minicp.cp.Factory.makeIntVar;
-import static minicp.cp.Factory.makeSolver;
-import static minicp.cp.Heuristics.firstFail;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
-public class Element1DTest {
+public class Element1DTest extends SolverTest {
 
     @Test
     public void element1dTest1() {
 
         try {
 
-            Solver cp = makeSolver();
-            IntVar x = makeIntVar(cp, -2, 40);
+            Solver cp = solverFactory.get();
+            IntVar y = makeIntVar(cp, -3, 10);
             IntVar z = makeIntVar(cp, 2, 40);
 
             int[] T = new int[]{9, 8, 7, 5, 6};
 
-            cp.post(new Element1D(T, x, z));
+            cp.post(new Element1D(T, y, z));
 
-            assertEquals(0, x.getMin());
-            assertEquals(4, x.getMax());
-            assertEquals(5, z.getMin());
-            assertEquals(9, z.getMax());
+            assertEquals(0, y.min());
+            assertEquals(4, y.max());
+
+
+            assertEquals(5, z.min());
+            assertEquals(9, z.max());
 
             z.removeAbove(7);
             cp.fixPoint();
 
-            assertEquals(2, x.getMin());
+            assertEquals(2, y.min());
 
 
-            x.remove(3);
+            y.remove(3);
             cp.fixPoint();
 
-            assertEquals(7, z.getMax());
-            assertEquals(6, z.getMin());
+            assertEquals(7, z.max());
+            assertEquals(6, z.min());
 
 
         } catch (InconsistencyException e) {
@@ -71,29 +72,27 @@ public class Element1DTest {
             NotImplementedExceptionAssume.fail(e);
         }
     }
-
 
     @Test
     public void element1dTest2() {
 
         try {
 
-            Solver cp = new Solver();
-            IntVar x = makeIntVar(cp, -2, 40);
-            IntVar z = makeIntVar(cp, 2, 40);
-
+            Solver cp = solverFactory.get();
+            IntVar y = makeIntVar(cp, -3, 10);
+            IntVar z = makeIntVar(cp, -20, 40);
 
             int[] T = new int[]{9, 8, 7, 5, 6};
 
-            cp.post(new Element1D(T, x, z));
+            cp.post(new Element1D(T, y, z));
 
-            DFSearch dfs = new DFSearch(cp.getTrail(), firstFail(x, z));
+            DFSearch dfs = makeDfs(cp, firstFail(y, z));
             dfs.onSolution(() ->
-                    assertEquals(T[x.getMin()], z.getMin())
+                    assertEquals(T[y.min()], z.min())
             );
-            SearchStatistics stats = dfs.start();
+            SearchStatistics stats = dfs.solve();
 
-            assertEquals(5, stats.nSolutions);
+            assertEquals(5, stats.numberOfSolutions());
 
         } catch (InconsistencyException e) {
             fail("should not fail");
@@ -102,11 +101,12 @@ public class Element1DTest {
         }
     }
 
+
     @Test
     public void element1dTest3() {
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar y = makeIntVar(cp, 0, 4);
             IntVar z = makeIntVar(cp, 5, 9);
 
@@ -120,8 +120,8 @@ public class Element1DTest {
 
             cp.fixPoint();
 
-            assertEquals(6, z.getMin());
-            assertEquals(8, z.getMax());
+            assertEquals(6, z.min());
+            assertEquals(8, z.max());
         } catch (InconsistencyException e) {
             fail("should not fail");
         } catch (NotImplementedException e) {
@@ -134,7 +134,7 @@ public class Element1DTest {
 
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar y = makeIntVar(cp, 0, 4);
             IntVar z = makeIntVar(cp, 5, 9);
 
@@ -155,4 +155,5 @@ public class Element1DTest {
             NotImplementedExceptionAssume.fail(e);
         }
     }
+
 }

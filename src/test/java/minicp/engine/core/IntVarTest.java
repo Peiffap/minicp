@@ -10,63 +10,67 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.core;
 
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.engine.SolverTest;
 import minicp.util.NotImplementedExceptionAssume;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
 import static minicp.cp.Factory.*;
+import static org.junit.Assert.*;
 
 
-public class IntVarTest {
+public class IntVarTest extends SolverTest {
 
     public boolean propagateCalled = false;
 
     @Test
     public void testIntVar() {
-        Solver cp  = makeSolver();
+        Solver cp = solverFactory.get();
 
-        IntVar x = makeIntVar(cp,10);
-        IntVar y = makeIntVar(cp,10);
+        IntVar x = makeIntVar(cp, 10);
+        IntVar y = makeIntVar(cp, 10);
 
-        cp.getTrail().push();
+        cp.getStateManager().saveState();
 
 
         try {
 
-        assertFalse(x.isBound());
-        x.remove(5);
-        assertEquals(9,x.getSize());
-        x.assign(7);
-        assertEquals(1,x.getSize());
-        assertTrue(x.isBound());
-        assertEquals(7,x.getMin());
-        assertEquals(7,x.getMax());
+            assertFalse(x.isBound());
+            x.remove(5);
+            assertEquals(9, x.size());
+            x.assign(7);
+            assertEquals(1, x.size());
+            assertTrue(x.isBound());
+            assertEquals(7, x.min());
+            assertEquals(7, x.max());
 
-        } catch(InconsistencyException e) { fail("should not fail here");}
+        } catch (InconsistencyException e) {
+            fail("should not fail here");
+        }
 
         try {
             x.assign(8);
-            fail( "should have failed" );
-        } catch (InconsistencyException expectedException) {}
+            fail("should have failed");
+        } catch (InconsistencyException expectedException) {
+        }
 
 
-
-        cp.getTrail().pop();
-        cp.getTrail().push();
+        cp.getStateManager().restoreState();
+        cp.getStateManager().saveState();
 
         assertFalse(x.isBound());
-        assertEquals(10,x.getSize());
+        assertEquals(10, x.size());
 
         for (int i = 0; i < 10; i++) {
             assertTrue(x.contains(i));
@@ -76,49 +80,16 @@ public class IntVarTest {
     }
 
     @Test
-    public void testIntVarView() {
-        Solver cp  = makeSolver();
-
-        IntVar x = plus(mul(plus(makeIntVar(cp,10),1),2),-1); // 2*(x+1)-1 = 2x+1 D(x)= {1,3,5,...,19}
-        IntVar y = plus(minus(mul(plus(makeIntVar(cp,10),-1),2)),-1); // (-2*(x-1))-1 = -2x+1 D(x)= {-17,-15,..,1}
-
-        cp.getTrail().push();
-
-
-        try {
-
-            assertFalse(x.isBound());
-            assertEquals(x.getMin(),1);
-            assertEquals(x.getMax(),19);
-            assertFalse(x.contains(2));
-            x.remove(5);
-            assertFalse(x.contains(5));
-
-            assertFalse(y.isBound());
-            assertEquals(y.getMin(),-17);
-            assertEquals(y.getMax(),1);
-            assertFalse(x.contains(-2));
-            x.remove(-5);
-            assertFalse(x.contains(-5));
-
-        } catch(InconsistencyException e) { fail("should not fail here");}
-
-
-
-    }
-
-    @Test
     public void onDomainChangeOnBind() {
         propagateCalled = false;
-        Solver cp  = makeSolver();
+        Solver cp = solverFactory.get();
 
-        IntVar x = makeIntVar(cp,10);
-        IntVar y = makeIntVar(cp,10);
+        IntVar x = makeIntVar(cp, 10);
+        IntVar y = makeIntVar(cp, 10);
 
-        Constraint cons = new Constraint(cp) {
-
+        Constraint cons = new AbstractConstraint(cp) {
             @Override
-            public void post() throws InconsistencyException {
+            public void post() {
                 x.whenBind(() -> propagateCalled = true);
                 y.whenDomainChange(() -> propagateCalled = true);
             }
@@ -150,11 +121,11 @@ public class IntVarTest {
 
         try {
 
-            Solver cp  = new Solver();
+            Solver cp = solverFactory.get();
 
-            IntVar x = makeIntVar(cp,-10,10);
+            IntVar x = makeIntVar(cp, -10, 10);
 
-            cp.push();
+            cp.getStateManager().saveState();
 
 
             try {
@@ -164,23 +135,26 @@ public class IntVarTest {
                 x.remove(-10);
 
 
-                assertEquals(19,x.getSize());
+                assertEquals(19, x.size());
                 x.assign(-4);
-                assertEquals(1,x.getSize());
+                assertEquals(1, x.size());
                 assertTrue(x.isBound());
-                assertEquals(-4,x.getMin());
+                assertEquals(-4, x.min());
 
-            } catch(InconsistencyException e) { fail("should not fail here");}
+            } catch (InconsistencyException e) {
+                fail("should not fail here");
+            }
 
             try {
                 x.assign(8);
-                fail( "should have failed" );
-            } catch (InconsistencyException expectedException) {}
+                fail("should have failed");
+            } catch (InconsistencyException expectedException) {
+            }
 
 
-            cp.pop();
+            cp.getStateManager().restoreState();
 
-            assertEquals(21,x.getSize());
+            assertEquals(21, x.size());
 
             for (int i = -10; i < 10; i++) {
                 assertTrue(x.contains(i));
@@ -194,43 +168,46 @@ public class IntVarTest {
     }
 
 
-
     @Test
     public void arbitrarySetDomains() {
 
         try {
 
-            Solver cp  = makeSolver();
+            Solver cp = solverFactory.get();
 
-            Set<Integer> dom = new HashSet<>(Arrays.asList(-7,-10,6,9,10,12));
+            Set<Integer> dom = new HashSet<>(Arrays.asList(-7, -10, 6, 9, 10, 12));
 
-            IntVar x = makeIntVar(cp,dom);
+            IntVar x = makeIntVar(cp, dom);
 
-            cp.push();
+            cp.getStateManager().saveState();
 
             try {
 
                 for (int i = -15; i < 15; i++) {
-                    if (dom.contains(i)) assertTrue(x.contains(i));
+                    if (dom.contains(i))
+                        assertTrue(x.contains(i));
                     else assertFalse(x.contains(i));
                 }
 
                 x.assign(-7);
-            } catch(InconsistencyException e) { fail("should not fail here");}
+            } catch (InconsistencyException e) {
+                fail("should not fail here");
+            }
 
             try {
                 x.assign(-10);
-                fail( "should have failed" );
-            } catch (InconsistencyException expectedException) {}
+                fail("should have failed");
+            } catch (InconsistencyException expectedException) {
+            }
 
 
-            cp.pop();
+            cp.getStateManager().restoreState();
 
             for (int i = -15; i < 15; i++) {
                 if (dom.contains(i)) assertTrue(x.contains(i));
                 else assertFalse(x.contains(i));
             }
-            assertEquals(6,x.getSize());
+            assertEquals(6, x.size());
 
 
         } catch (NotImplementedException e) {
@@ -242,17 +219,17 @@ public class IntVarTest {
     @Test
     public void onBoundChange() {
 
-        Solver cp = new Solver();
+        Solver cp = solverFactory.get();
 
         IntVar x = makeIntVar(cp, 10);
         IntVar y = makeIntVar(cp, 10);
 
-        Constraint cons = new Constraint(cp) {
+        Constraint cons = new AbstractConstraint(cp) {
 
             @Override
-            public void post() throws InconsistencyException {
-                x.whenBind(() -> propagateCalled  = true);
-                y.whenBoundsChange(() -> propagateCalled = true);
+            public void post() {
+                x.whenBind(() -> propagateCalled = true);
+                y.whenDomainChange(() -> propagateCalled = true);
             }
         };
 
@@ -275,7 +252,7 @@ public class IntVarTest {
             propagateCalled = false;
             y.remove(2);
             cp.fixPoint();
-            assertFalse(propagateCalled);
+            assertTrue(propagateCalled);
 
         } catch (InconsistencyException inconsistency) {
             fail("should not fail");
@@ -283,25 +260,23 @@ public class IntVarTest {
     }
 
 
-
     @Test
     public void removeAbove() {
 
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
 
             IntVar x = makeIntVar(cp, 10);
 
-            Constraint cons = new Constraint(cp) {
-
+            Constraint cons = new AbstractConstraint(cp) {
                 @Override
-                public void post() throws InconsistencyException {
+                public void post() {
                     x.propagateOnBoundChange(this);
                 }
 
                 @Override
-                public void propagate() throws InconsistencyException {
+                public void propagate() {
                     propagateCalled = true;
                 }
             };
@@ -311,7 +286,8 @@ public class IntVarTest {
                 x.remove(8);
                 cp.fixPoint();
                 assertFalse(propagateCalled);
-                assertEquals(7,x.removeAbove(8));
+                x.removeAbove(8);
+                assertEquals(7, x.max());
                 cp.fixPoint();
                 assertTrue(propagateCalled);
 
@@ -329,19 +305,17 @@ public class IntVarTest {
 
         try {
 
-            Solver cp = new Solver();
-
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, 10);
 
-            Constraint cons = new Constraint(cp) {
-
+            Constraint cons = new AbstractConstraint(cp) {
                 @Override
-                public void post() throws InconsistencyException {
+                public void post() {
                     x.propagateOnBoundChange(this);
                 }
 
                 @Override
-                public void propagate() throws InconsistencyException {
+                public void propagate() {
                     propagateCalled = true;
                 }
             };
@@ -351,12 +325,14 @@ public class IntVarTest {
                 x.remove(3);
                 cp.fixPoint();
                 assertFalse(propagateCalled);
-                assertEquals(4,x.removeBelow(3));
+                x.removeBelow(3);
+                assertEquals(4, x.min());
                 cp.fixPoint();
                 assertTrue(propagateCalled);
                 propagateCalled = false;
 
-                assertEquals(5,x.removeBelow(5));
+                x.removeBelow(5);
+                assertEquals(5, x.min());
                 cp.fixPoint();
                 assertTrue(propagateCalled);
                 propagateCalled = false;
@@ -371,11 +347,12 @@ public class IntVarTest {
         }
     }
 
+
     @Test
     public void fillArray() {
 
         try {
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
 
             IntVar x = plus(mul(minus(makeIntVar(cp, 5)), 3), 5); // D(x)= {-7,-4,-1,2,5}
             int[] values = new int[10];
@@ -384,9 +361,6 @@ public class IntVarTest {
             for (int i = 0; i < s; i++) {
                 dom.add(values[i]);
             }
-            System.out.println(x);
-            System.out.println(dom);
-            System.out.println(s);
             HashSet<Integer> expectedDom = new HashSet<Integer>();
             Collections.addAll(expectedDom, -7, -4, -1, 2, 5);
             assertEquals(expectedDom, dom);
@@ -395,4 +369,6 @@ public class IntVarTest {
             NotImplementedExceptionAssume.fail(e);
         }
     }
+
+
 }

@@ -10,16 +10,17 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 
 package minicp.engine.core;
 
+import minicp.util.Procedure;
 
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
-
+/**
+ * A view on a variable of type {@code x+o}
+ */
 public class IntVarViewOffset implements IntVar {
 
     private final IntVar x;
@@ -36,18 +37,18 @@ public class IntVarViewOffset implements IntVar {
     }
 
     @Override
-    public void whenDomainChange(ConstraintClosure.Filtering c) {
-        x.whenDomainChange(c);
+    public void whenBind(Procedure f) {
+        x.whenBind(f);
     }
 
     @Override
-    public void whenBind(ConstraintClosure.Filtering c) {
-        x.whenBind(c);
+    public void whenBoundsChange(Procedure f) {
+        x.whenBoundsChange(f);
     }
 
     @Override
-    public void whenBoundsChange(ConstraintClosure.Filtering c) {
-        x.whenBoundsChange(c);
+    public void whenDomainChange(Procedure f) {
+        x.whenDomainChange(f);
     }
 
     @Override
@@ -66,23 +67,27 @@ public class IntVarViewOffset implements IntVar {
     }
 
     @Override
-    public int getMin() {
-        return x.getMin() + o;
+    public int min() {
+        return x.min() + o;
     }
 
     @Override
-    public int getMax() {
-        return x.getMax() + o;
+    public int max() {
+        return x.max() + o;
     }
 
     @Override
-    public int getSize() {
-        return x.getSize();
+    public int size() {
+        return x.size();
     }
 
     @Override
     public int fillArray(int[] dest) {
-        throw new NotImplementedException("implement fillArray in IntVarViewOffset");
+        int s = x.fillArray(dest);
+        for (int i = 0; i < s; i++) {
+            dest[i] += o;
+        }
+        return s;
     }
 
     @Override
@@ -96,23 +101,38 @@ public class IntVarViewOffset implements IntVar {
     }
 
     @Override
-    public void remove(int v) throws InconsistencyException {
+    public void remove(int v) {
         x.remove(v - o);
     }
 
     @Override
-    public void assign(int v) throws InconsistencyException {
+    public void assign(int v) {
         x.assign(v - o);
     }
 
     @Override
-    public int removeBelow(int v) throws InconsistencyException {
-        return x.removeBelow(v - o);
+    public void removeBelow(int v) {
+        x.removeBelow(v - o);
     }
 
     @Override
-    public int removeAbove(int v) throws InconsistencyException {
-        return x.removeAbove(v - o);
+    public void removeAbove(int v) {
+        x.removeAbove(v - o);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("{");
+        for (int i = min(); i <= max() - 1; i++) {
+            if (contains((i))) {
+                b.append(i);
+                b.append(',');
+            }
+        }
+        if (size() > 0) b.append(max());
+        b.append("}");
+        return b.toString();
+
+    }
 }

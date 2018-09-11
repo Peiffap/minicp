@@ -10,7 +10,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
@@ -18,16 +18,18 @@ package minicp.engine.constraints;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
+import minicp.search.Objective;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Test;
 
+import static minicp.cp.BranchingScheme.EMPTY;
+import static minicp.cp.BranchingScheme.branch;
 import static minicp.cp.Factory.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import static minicp.search.Selector.*;
 
 public class MaximizeTest {
 
@@ -37,16 +39,16 @@ public class MaximizeTest {
             try {
 
                 Solver cp = makeSolver();
-                IntVar y = makeIntVar(cp, 10,20);
+                IntVar y = makeIntVar(cp, 10, 20);
 
                 IntVar[] x = new IntVar[]{y};
-                DFSearch dfs = makeDfs(cp,() -> y.isBound() ? TRUE : branch(() -> equal(y,y.getMin()),() -> notEqual(y,y.getMin())));
+                DFSearch dfs = makeDfs(cp, () -> y.isBound() ? EMPTY : branch(() -> equal(y, y.min()), () -> notEqual(y, y.min())));
 
-                cp.post(maximize(y,dfs));
+                Objective obj = cp.maximize(y);
 
-                SearchStatistics stats = dfs.start();
+                SearchStatistics stats = dfs.solve();
 
-                assertEquals(stats.nSolutions,11);
+                assertEquals(11,stats.numberOfSolutions());
 
 
             } catch (InconsistencyException e) {
@@ -57,10 +59,6 @@ public class MaximizeTest {
         }
 
     }
-
-
-
-
 
 
 }

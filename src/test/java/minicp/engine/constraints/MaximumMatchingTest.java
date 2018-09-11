@@ -10,16 +10,17 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -30,13 +31,13 @@ import static minicp.cp.Factory.makeIntVar;
 import static org.junit.Assert.*;
 
 
-public class MaximumMatchingTest {
+public class MaximumMatchingTest extends SolverTest {
 
-    private static IntVar makeIVar(Solver cp, Integer ... values) {
-        return makeIntVar(cp,new HashSet<>(Arrays.asList(values)));
+    private static IntVar makeIVar(Solver cp, Integer... values) {
+        return makeIntVar(cp, new HashSet<>(Arrays.asList(values)));
     }
 
-    private void check(IntVar[] x, int [] matching, int size, int expectedSize) {
+    private void check(IntVar[] x, int[] matching, int size, int expectedSize) {
         Set<Integer> values = new HashSet<>();
         for (int i = 0; i < x.length; i++) {
             if (matching[i] != MaximumMatching.NONE) {
@@ -45,14 +46,14 @@ public class MaximumMatchingTest {
             }
 
         }
-        assertEquals(size,values.size());
-        assertEquals(expectedSize,size);
+        assertEquals(size, values.size());
+        assertEquals(expectedSize, size);
     }
 
     @Test
     public void test1() {
         try {
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar[] x = new IntVar[]{
                     makeIVar(cp, 1, 2),
                     makeIVar(cp, 1, 2),
@@ -61,17 +62,15 @@ public class MaximumMatchingTest {
             MaximumMatching maximumMatching = new MaximumMatching(x);
 
 
-            check(x,matching,maximumMatching.compute(matching),3);
+            check(x, matching, maximumMatching.compute(matching), 3);
 
 
             x[2].remove(3);
-            check(x,matching,maximumMatching.compute(matching),3);
-
+            check(x, matching, maximumMatching.compute(matching), 3);
 
 
             x[2].remove(4);
-            check(x,matching,maximumMatching.compute(matching),2);
-
+            check(x, matching, maximumMatching.compute(matching), 2);
 
 
         } catch (InconsistencyException e) {
@@ -80,15 +79,13 @@ public class MaximumMatchingTest {
             NotImplementedExceptionAssume.fail(e);
         }
 
-
     }
-
 
 
     @Test
     public void test2() {
         try {
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar[] x = new IntVar[]{
                     makeIVar(cp, 1, 4, 5),
                     makeIVar(cp, 9, 10), // will be 10
@@ -100,16 +97,16 @@ public class MaximumMatchingTest {
             MaximumMatching maximumMatching = new MaximumMatching(x);
             int[] matching = new int[x.length];
 
-            check(x,matching,maximumMatching.compute(matching),6);
+            check(x, matching, maximumMatching.compute(matching), 6);
 
             x[5].remove(5);
 
-            check(x,matching,maximumMatching.compute(matching),6);
+            check(x, matching, maximumMatching.compute(matching), 6);
 
             x[0].remove(5);
             x[3].remove(5);
 
-            check(x,matching,maximumMatching.compute(matching),5);
+            check(x, matching, maximumMatching.compute(matching), 5);
 
 
         } catch (InconsistencyException e) {
@@ -119,7 +116,6 @@ public class MaximumMatchingTest {
         }
 
     }
-
 
 
 }

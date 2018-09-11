@@ -10,33 +10,35 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.BoolVar;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Test;
 
+import static minicp.cp.BranchingScheme.firstFail;
 import static minicp.cp.Factory.*;
-import static minicp.cp.Heuristics.firstFail;
 import static org.junit.Assert.*;
 
 
-public class IsLessOrEqualVarTest {
+public class IsLessOrEqualVarTest extends SolverTest {
 
     @Test
     public void test1() {
         try {
 
-            Solver cp = new Solver();
+
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, 0, 5);
             IntVar y = makeIntVar(cp, 0, 5);
 
@@ -44,15 +46,15 @@ public class IsLessOrEqualVarTest {
 
             cp.post(new IsLessOrEqualVar(b, x, y));
 
-            DFSearch search = new DFSearch(cp.getTrail(), firstFail(x, y));
+            DFSearch search = makeDfs(cp, firstFail(x, y));
 
-            SearchStatistics stats = search.start();
+            SearchStatistics stats = search.solve();
 
             search.onSolution(() ->
-                    assertTrue(x.getMin() <= y.getMin() && b.isTrue() || x.getMin() > y.getMin() && b.isFalse())
+                    assertTrue(x.min() <= y.min() && b.isTrue() || x.min() > y.min() && b.isFalse())
             );
 
-            assertEquals(36, stats.nSolutions);
+            assertEquals(36, stats.numberOfSolutions());
 
         } catch (InconsistencyException e) {
             fail("should not fail");
@@ -65,7 +67,7 @@ public class IsLessOrEqualVarTest {
     public void test2() {
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -8, 7);
             IntVar y = makeIntVar(cp, -4, 3);
 
@@ -73,15 +75,15 @@ public class IsLessOrEqualVarTest {
 
             cp.post(new IsLessOrEqualVar(b, x, y));
 
-            cp.push();
+            cp.getStateManager().saveState();
             equal(b, 1);
-            assertEquals(3, x.getMax());
-            cp.pop();
+            assertEquals(3, x.max());
+            cp.getStateManager().restoreState();
 
-            cp.push();
+            cp.getStateManager().saveState();
             equal(b, 0);
-            assertEquals(-3, x.getMin());
-            cp.pop();
+            assertEquals(-3, x.min());
+            cp.getStateManager().restoreState();
 
         } catch (InconsistencyException e) {
             fail("should not fail");
@@ -94,7 +96,7 @@ public class IsLessOrEqualVarTest {
     public void test3() {
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -4, 7);
             IntVar y = makeIntVar(cp, 0, 7);
             equal(x, -2);
@@ -115,22 +117,21 @@ public class IsLessOrEqualVarTest {
     public void test4() {
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -4, 7);
             BoolVar b = makeBoolVar(cp);
 
-            cp.push();
+            cp.getStateManager().saveState();
             equal(b, 1);
             cp.post(new IsLessOrEqual(b, x, -2));
-            assertEquals(-2, x.getMax());
-            cp.pop();
+            assertEquals(-2, x.max());
+            cp.getStateManager().restoreState();
 
-            cp.push();
+            cp.getStateManager().saveState();
             equal(b, 0);
             cp.post(new IsLessOrEqual(b, x, -2));
-            assertEquals(-1, x.getMin());
-
-            cp.pop();
+            assertEquals(-1, x.min());
+            cp.getStateManager().restoreState();
 
 
         } catch (InconsistencyException e) {

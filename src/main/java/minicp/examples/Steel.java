@@ -15,28 +15,27 @@
 
 package minicp.examples;
 
+import minicp.cp.Factory;
 import minicp.engine.constraints.IsOr;
 import minicp.engine.core.BoolVar;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
-import minicp.search.Alternative;
 import minicp.search.DFSearch;
+import minicp.search.Objective;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.InputReader;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.io.InputReader;
+import minicp.util.Procedure;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 
+import static minicp.cp.BranchingScheme.*;
 import static minicp.cp.Factory.*;
-import static minicp.cp.Heuristics.*;
-import static minicp.search.Selector.branch;
-import static minicp.search.Selector.selectMin;
 
 /**
- * Problem described in http://www.csplib.org/Problems/prob038/
  * Steel is produced by casting molten iron into slabs.
  * A steel mill can produce a finite number of slab sizes.
  * An order has two properties, a colour corresponding to the route required through the steel mill and a weight.
@@ -45,15 +44,16 @@ import static minicp.search.Selector.selectMin;
  * This assignment is subject to two further constraints:
  * - Capacity constraints: The total weight of orders assigned to a slab cannot exceed the slab capacity.
  * - Colour constraints: Each slab can contain at most p of k total colours (p is usually 2).
+ * <a href="http://www.csplib.org/Problems/prob038/">CSPLib</a>
  */
 public class Steel {
 
 
-    public static void main(String[] args) throws InconsistencyException {
+    public static void main(String[] args) {
 
         // Reading the data
 
-        InputReader reader = new InputReader("data/steel/bench_20_0");
+        InputReader reader = new InputReader("data/steel/bench_19_10");
         int nCapa = reader.getInt();
         int[] capa = new int[nCapa];
         for (int i = 0; i < nCapa; i++) {
@@ -75,7 +75,7 @@ public class Steel {
         int[] c = new int[nSlab];
         for (int i = 0; i < nSlab; i++) {
             w[i] = reader.getInt();
-            c[i] = reader.getInt()-1;
+            c[i] = reader.getInt() - 1;
         }
 
         // ---------------------------
@@ -109,10 +109,10 @@ public class Steel {
                     }
 
                     // TODO 2: model that presence[col] is true iff at least one order with color col is placed in slab j
-
+                    
                 }
-                // TODO 3 : restrict the number of colors present in slab j to be <= 2
-                lessOrEqual(sum(presence),2);
+                // TODO 3: restrict the number of colors present in slab j to be <= 2
+                
             }
 
 
@@ -126,45 +126,38 @@ public class Steel {
             }
 
             // TODO 4: add the redundant constraint that the sum of the loads is equal to the sum of elements
-            cp.post(sum(l, IntStream.of(w).sum()));
-            System.out.println("total weights of items:"+IntStream.of(w).sum());
+            
 
-
-            // TODO 1: model the objective function using element constraint + a sum constraint
+            // TODO 5: model the objective function using element constraint + a sum constraint
             IntVar totLoss = null;
+            
 
-            //DFSearch dfs = makeDfs(cp,firstFail(x));
-
-
-            // TODO 5:  add static symmetry breaking constraint (load or loss are decreasing along the slabs)
-
-            DFSearch dfs = makeDfs(cp,firstFail(x));
-
-            // TODO 6 implement a dynamic symmetry breaking during search
+            Objective obj = cp.minimize(totLoss);
 
 
-            cp.post(minimize(totLoss, dfs));
+            // TODO 6 add static symmetry breaking constraint
 
+            // TODO 7 implement a dynamic symmetry breaking during search
+             DFSearch dfs = makeDfs(cp,firstFail(x));
             dfs.onSolution(() -> {
                 System.out.println("---");
-                System.out.println(totLoss);
+                //System.out.println(totLoss);
 
-                // check that the color constraints are satisfied
                 Set<Integer>[] colorsInSlab = new Set[nSlab];
                 for (int j = 0; j < nSlab; j++) {
                     colorsInSlab[j] = new HashSet<>();
                 }
                 for (int i = 0; i < nOrder; i++) {
-                    colorsInSlab[x[i].getMin()].add(c[i]);
+                    colorsInSlab[x[i].min()].add(c[i]);
                 }
                 for (int j = 0; j < nSlab; j++) {
                     if (colorsInSlab[j].size() > 2) {
-                        System.out.println("problem, "+colorsInSlab[j].size()+" colors in slab "+j+" should be <= 2");
+                        System.out.println("problem, " + colorsInSlab[j].size() + " colors in slab " + j + " should be <= 2");
                     }
                 }
             });
 
-            SearchStatistics statistics = dfs.start();
+            SearchStatistics statistics = dfs.optimize(obj);
             System.out.println(statistics);
 
         } catch (InconsistencyException e) {

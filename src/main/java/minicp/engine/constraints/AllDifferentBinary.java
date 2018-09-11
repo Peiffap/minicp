@@ -10,31 +10,30 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
-import minicp.engine.core.Constraint;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
-import minicp.util.InconsistencyException;
 
-public class AllDifferentBinary extends Constraint {
+public class AllDifferentBinary extends AbstractConstraint {
 
-    private IntVar [] x;
+    private IntVar[] x;
 
-    public AllDifferentBinary(IntVar ... x) {
+    public AllDifferentBinary(IntVar... x) {
         super(x[0].getSolver());
         this.x = x;
     }
 
     @Override
-    public void post() throws InconsistencyException {
+    public void post() {
         Solver cp = x[0].getSolver();
         for (int i = 0; i < x.length; i++) {
-            for (int j = i+1; j < x.length; j++) {
-                cp.post(new NotEqual(x[i],x[j]),false);
+            for (int j = i + 1; j < x.length; j++) {
+                cp.post(new NotEqual(x[i], x[j]), false);
             }
         }
     }

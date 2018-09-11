@@ -10,23 +10,28 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 
 package minicp.engine.constraints;
 
-import static minicp.cp.Factory.*;
-
-import minicp.engine.core.Constraint;
-import minicp.engine.core.IntVar;
+import minicp.cp.Factory;
 import minicp.engine.constraints.Profile.Rectangle;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.IntVar;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 
 import java.util.ArrayList;
 
-public class Cumulative extends Constraint {
+import static minicp.cp.Factory.minus;
+import static minicp.cp.Factory.plus;
+
+/**
+ * Cumulative constraint with time-table filtering
+ */
+public class Cumulative extends AbstractConstraint {
 
     private final IntVar[] start;
     private final int[] duration;
@@ -36,15 +41,25 @@ public class Cumulative extends Constraint {
     private final boolean postMirror;
 
 
-    public Cumulative(IntVar[] start, int[] duration, int[] demand, int capa) throws InconsistencyException {
+    /**
+     * Creates a cumulative constraint with a time-table filtering.
+     * At any time-point t, the sum of the demands
+     * of the activities overlapping t do not overlap the capacity.
+     *
+     * @param start the start time of each activities
+     * @param duration the duration of each activities (non negative)
+     * @param demand the demand of each activities, non negative
+     * @param capa the capacity of the constraint
+     */
+    public Cumulative(IntVar[] start, int[] duration, int[] demand, int capa) {
         this(start, duration, demand, capa, true);
     }
 
-    private Cumulative(IntVar[] start, int[] duration, int[] demand, int capa, boolean postMirror) throws InconsistencyException {
+    private Cumulative(IntVar[] start, int[] duration, int[] demand, int capa, boolean postMirror) {
         super(start[0].getSolver());
         this.start = start;
         this.duration = duration;
-        this.end = makeIntVarArray(cp,start.length, i -> plus(start[i],duration[i]));
+        this.end = Factory.makeIntVarArray(start.length, i -> plus(start[i], duration[i]));
         this.demand = demand;
         this.capa = capa;
         this.postMirror = postMirror;
@@ -52,50 +67,47 @@ public class Cumulative extends Constraint {
 
 
     @Override
-    public void post() throws InconsistencyException {
+    public void post() {
         for (int i = 0; i < start.length; i++) {
             start[i].propagateOnBoundChange(this);
         }
 
         if (postMirror) {
-            IntVar[] startMirror = makeIntVarArray(cp, start.length, i -> minus(end[i]));
-            cp.post(new Cumulative(startMirror, duration, demand, capa, false), false);
+            IntVar[] startMirror = Factory.makeIntVarArray(start.length, i -> minus(end[i]));
+            getSolver().post(new Cumulative(startMirror, duration, demand, capa, false), false);
         }
 
         propagate();
     }
 
     @Override
-    public void propagate() throws InconsistencyException {
-
-
+    public void propagate() {
         Profile profile = buildProfile();
         // TODO 2: check that the profile is not exceeding the capa otherwise throw an INCONSISTENCY
-
         for (int i = 0; i < profile.size(); i++) {
-            // TODO: check
+             throw new NotImplementedException("Cumulative");
         }
 
         for (int i = 0; i < start.length; i++) {
             if (!start[i].isBound()) {
                 // j is the index of the profile rectangle overlapping t
-                int j = profile.rectangleIndex(start[i].getMin());
+                int j = profile.rectangleIndex(start[i].min());
                 // TODO 3: push i to the right
                 // hint:
-                // You need to check that at every-point on the interval
+                // Check that at every-point on the interval
                 // [start[i].getMin() ... start[i].getMin()+duration[i]-1] there is enough space.
                 // You may have to look-ahead on the next profile rectangle(s)
                 // Be careful that the activity you are currently pushing may have contributed to the profile.
-
+                 throw new NotImplementedException();
             }
         }
-        throw new NotImplementedException("Cumulative");
     }
 
-    public Profile buildProfile() throws InconsistencyException {
+    public Profile buildProfile() {
         ArrayList<Rectangle> mandatoryParts = new ArrayList<Rectangle>();
         for (int i = 0; i < start.length; i++) {
             // TODO 1: add mandatory part of activity i if any
+             throw new NotImplementedException("Cumulative");
         }
         return new Profile(mandatoryParts.toArray(new Profile.Rectangle[0]));
     }

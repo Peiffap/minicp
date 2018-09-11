@@ -16,20 +16,23 @@
 
 package minicp.engine.constraints;
 
-import minicp.engine.core.Constraint;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.NotImplementedException;
 
-public class Maximum extends Constraint {
+/**
+ * Maximum Constraint
+ */
+public class Maximum extends AbstractConstraint {
 
     private final IntVar[] x;
     private final IntVar y;
 
     /**
-     * y = maximum(x[0],x[1],...,x[n])
-     * @param x
-     * @param y
+     * Creates the maximum constraint y = maximum(x[0],x[1],...,x[n])?
+     *
+     * @param x the variable on which the maximum is to be found
+     * @param y the variable that is equal to the maximum on x
      */
     public Maximum(IntVar[] x, IntVar y) {
         super(x[0].getSolver());
@@ -40,14 +43,37 @@ public class Maximum extends Constraint {
 
 
     @Override
-    public void post() throws InconsistencyException {
+    public void post() {
         // TODO
-        throw new NotImplementedException("Maximum");
+         throw new NotImplementedException("Maximum");
     }
 
+
     @Override
-    public void propagate() throws InconsistencyException {
-        // TODO
-        throw new NotImplementedException("Maximum");
+    public void propagate() {
+        int max = Integer.MIN_VALUE;
+        int min = Integer.MIN_VALUE;
+        int nSupport = 0;
+        int supportIdx = -1;
+        for (int i = 0; i < x.length; i++) {
+            x[i].removeAbove(y.max());
+
+            if (x[i].max() > max) {
+                max = x[i].max();
+            }
+            if (x[i].min() > min) {
+                min = x[i].min();
+            }
+
+            if (x[i].max() >= y.min()) {
+                nSupport += 1;
+                supportIdx = i;
+            }
+        }
+        if (nSupport == 1) {
+            x[supportIdx].removeBelow(y.min());
+        }
+        y.removeAbove(max);
+        y.removeBelow(min);
     }
 }

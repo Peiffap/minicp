@@ -10,31 +10,29 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.core;
 
-import minicp.util.InconsistencyException;
-
 public class BoolVarImpl extends IntVarImpl implements BoolVar {
 
     public BoolVarImpl(Solver cp) {
-        super(cp,0,1);
+        super(cp, 0, 1);
     }
 
     @Override
     public boolean isTrue() {
-        return getMin() == 1;
+        return min() == 1;
     }
 
     @Override
     public boolean isFalse() {
-        return getMax() == 0;
+        return max() == 0;
     }
 
     @Override
-    public void assign(boolean b) throws InconsistencyException {
+    public void assign(boolean b) {
         assign(b ? 1 : 0);
     }
 }

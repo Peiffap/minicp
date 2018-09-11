@@ -22,53 +22,35 @@ import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
+import minicp.util.io.InputReader;
 
 import java.util.Arrays;
 
+import static minicp.cp.BranchingScheme.and;
+import static minicp.cp.BranchingScheme.firstFail;
 import static minicp.cp.Factory.*;
-import static minicp.cp.Heuristics.and;
-import static minicp.cp.Heuristics.firstFail;
 
 /**
  * Stable Marriage problem:
- * Given n men and n women, where each person has ranked all members
+ * Given n men and n women, where each person has ranked makeIntVarArray members
  * of the opposite sex with a unique number between 1 and n in order of preference,
  * marry the men and women together such that there are no two people of opposite sex
  * who would both rather have each other than their current partners.
- * If there are no such people, all the marriages are "stable".
- * Wikipedia: http://en.wikipedia.org/wiki/Stable_marriage_problem
+ * If there are no such people, makeIntVarArray the marriages are "stable".
+ * <a href="http://en.wikipedia.org/wiki/Stable_marriage_problem">Wikipedia</a>.
  */
 public class StableMariage {
 
 
-    public static void main(String[] args) throws InconsistencyException {
+    public static void main(String[] args) {
 
 
         // http://mathworld.wolfram.com/StableMarriageProblem.html
         // for each man, what is his ranking for the women (lower is better)
-        int[][] rankWomen = new int[][]{
-                {7, 3, 8, 9, 6, 4, 2, 1, 5},
-                {5, 4, 8, 3, 1, 2, 6, 7, 9},
-                {4, 8, 3, 9, 7, 5, 6, 1, 2},
-                {9, 7, 4, 2, 5, 8, 3, 1, 6},
-                {2, 6, 4, 9, 8, 7, 5, 1, 3},
-                {2, 7, 8, 6, 5, 3, 4, 1, 9},
-                {1, 6, 2, 3, 8, 5, 4, 9, 7},
-                {5, 6, 9, 1, 2, 8, 4, 3, 7},
-                {6, 1, 4, 7, 5, 8, 3, 9, 2}};
-
-        // for each woman, what is her ranking for the men (lower is better)
-        int[][] rankMen = new int[][]{
-                {3, 1, 5, 2, 8, 7, 6, 9, 4},
-                {9, 4, 8, 1, 7, 6, 3, 2, 5},
-                {3, 1, 8, 9, 5, 4, 2, 6, 7},
-                {8, 7, 5, 3, 2, 6, 4, 9, 1},
-                {6, 9, 2, 5, 1, 4, 7, 3, 8},
-                {2, 4, 5, 1, 6, 8, 3, 9, 7},
-                {9, 3, 8, 2, 7, 5, 4, 6, 1},
-                {6, 3, 2, 1, 8, 4, 5, 9, 7},
-                {8, 2, 6, 4, 9, 1, 3, 7, 5}};
+        InputReader reader = new InputReader("data/stable_mariage.txt");
+        int n = reader.getInt();
+        int[][] rankWomen = reader.getMatrix(n, n);
+        int[][] rankMen = reader.getMatrix(n, n);
 
         // you should get six solutions:
         /*
@@ -91,39 +73,37 @@ public class StableMariage {
         husband:6,8,4,7,1,5,0,3,2
         */
 
-        int n = rankMen.length;
 
-        Solver cp = new Solver();
+        Solver cp = makeSolver();
 
         // wife[m] is the woman chosen for man m
-        IntVar [] wife = makeIntVarArray(cp,n,n);
+        IntVar[] wife = makeIntVarArray(cp, n, n);
         // husband[w] is the man chosen for woman w
-        IntVar [] husband = makeIntVarArray(cp,n,n);
+        IntVar[] husband = makeIntVarArray(cp, n, n);
 
         // wifePref[m] is the preference for the woman chosen for man m
-        IntVar [] wifePref = makeIntVarArray(cp,n,n+1);
+        IntVar[] wifePref = makeIntVarArray(cp, n, n + 1);
         // husbandPref[w] is the preference for the man chosen for woman w
-        IntVar [] husbandPref = makeIntVarArray(cp,n,n+1);
-
+        IntVar[] husbandPref = makeIntVarArray(cp, n, n + 1);
 
 
         for (int m = 0; m < n; m++) {
             // the husband of the wife of man m is m
             // TODO: model this with Element1DVar
+            
 
-
-            // rankWomen[m][wife[m]] == wifeFref[m]
-            // TODO: model this with Element1D
-
+            // TODO: model this with Element1D: rankWomen[m][wife[m]] == wifeFref[m]
+            
 
         }
 
         for (int w = 0; w < n; w++) {
-            // the wife of the husband of woman w is w
+            // the wife of the husband of woman i is i
             // TODO: model this with Element1DVar
+            
 
-            // rankMen[w][husband[w]] == husbandPref[w]
-            // TODO: model this with Element1D
+            // TODO: model this with Element1D: rankMen[w][husband[w]] == husbandPref[w]
+            
         }
 
         for (int m = 0; m < n; m++) {
@@ -131,20 +111,20 @@ public class StableMariage {
                 // if m prefers w than his wife, the opposite is not true i.e. w prefers her own husband than m
                 // (wifePref[m] > rankWomen[m][w]) => (husbandPref[w] < rankMen[w][m])
 
-                BoolVar mPrefersW = isLarger(wifePref[m],rankWomen[m][w]);
-                BoolVar wDont = isLess(husbandPref[w],rankMen[w][m]);
-                cp.post(implies(mPrefersW,wDont));
+                BoolVar mPrefersW = isLarger(wifePref[m], rankWomen[m][w]);
+                BoolVar wDont = isLess(husbandPref[w], rankMen[w][m]);
+                cp.post(implies(mPrefersW, wDont));
 
                 // if w prefers m than her husband, the opposite is not true i.e. m prefers his own woman than w
                 // (husbandPref[w] > rankMen[w][m]) => (wifePref[m] < rankWomen[m][w])
                 // TODO: model this constraint
+                
 
             }
         }
 
 
-        DFSearch dfs = makeDfs(cp,
-                and(firstFail(wife), firstFail(husband)));
+        DFSearch dfs = makeDfs(cp, and(firstFail(wife), firstFail(husband)));
 
         dfs.onSolution(() -> {
                     System.out.println(Arrays.toString(wife));
@@ -153,20 +133,21 @@ public class StableMariage {
         );
 
 
-        SearchStatistics stats = dfs.start();
+        SearchStatistics stats = dfs.solve();
         System.out.println(stats);
 
     }
 
     /**
-     *
-     * @param b1
-     * @param b2
-     * @return b equiv (b1 => b2) (logical implication)
+     * Model the reified logical implication constraint
+     * @param b1 left hand side of the implication
+     * @param b2 right hand side of the implication
+     * @return a boolean variable that is true if and only if
+     *         the relation "b1 implies b2" is true, false otehrwise.
      */
-    public static BoolVar implies(BoolVar b1, BoolVar b2) throws InconsistencyException {
-        IntVar not_b1 = plus(minus(b1),1);
-        return isLargerOrEqual(sum(not_b1,b2),1);
+    private static BoolVar implies(BoolVar b1, BoolVar b2) {
+        IntVar notB1 = plus(minus(b1), 1);
+        return isLargerOrEqual(sum(notB1, b2), 1);
     }
 }
 

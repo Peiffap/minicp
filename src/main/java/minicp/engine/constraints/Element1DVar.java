@@ -15,35 +15,38 @@
 
 package minicp.engine.constraints;
 
-import minicp.engine.core.Constraint;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.NotImplementedException;
 
-public class Element1DVar extends Constraint {
+public class Element1DVar extends AbstractConstraint {
 
-    private final IntVar[] T;
+    private final IntVar[] array;
     private final IntVar y;
     private final IntVar z;
 
+    
 
-
-    public Element1DVar(IntVar[] T, IntVar y, IntVar z) {
+    public Element1DVar(IntVar[] array, IntVar y, IntVar z) {
         super(y.getSolver());
-        this.T = T;
+        this.array = array;
         this.y = y;
         this.z = z;
+
+        
     }
 
     @Override
-    public void post() throws InconsistencyException {
-        // TODO
-        throw new NotImplementedException("Element1DVar");
+    public void post() {
+         throw new NotImplementedException();
     }
 
     @Override
-    public void propagate() throws InconsistencyException {
-        // TODO
-        throw new NotImplementedException("Element1DVar");
+    public void propagate() {
+         throw new NotImplementedException();
+
     }
+
+    
+
 }

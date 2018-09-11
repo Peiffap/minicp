@@ -15,29 +15,31 @@
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Test;
 
+import static minicp.cp.BranchingScheme.firstFail;
+import static minicp.cp.Factory.makeDfs;
 import static minicp.cp.Factory.makeIntVar;
-import static minicp.cp.Factory.makeSolver;
-import static minicp.cp.Heuristics.firstFail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 
-public class Element1DVarTest {
+public class Element1DVarTest extends SolverTest {
 
     @Test
     public void element1dVarTest1() {
+
         try {
 
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar y = makeIntVar(cp, -3, 10);
             IntVar z = makeIntVar(cp, 2, 40);
 
@@ -45,24 +47,24 @@ public class Element1DVarTest {
 
             cp.post(new Element1DVar(T, y, z));
 
-            assertEquals(0, y.getMin());
-            assertEquals(4, y.getMax());
+            assertEquals(0, y.min());
+            assertEquals(4, y.max());
 
 
-            assertEquals(5, z.getMin());
-            assertEquals(9, z.getMax());
+            assertEquals(5, z.min());
+            assertEquals(9, z.max());
 
             z.removeAbove(7);
             cp.fixPoint();
 
-            assertEquals(2, y.getMin());
+            assertEquals(2, y.min());
 
 
             y.remove(3);
             cp.fixPoint();
 
-            assertEquals(7, z.getMax());
-            assertEquals(6, z.getMin());
+            assertEquals(7, z.max());
+            assertEquals(6, z.min());
 
 
         } catch (InconsistencyException e) {
@@ -74,9 +76,10 @@ public class Element1DVarTest {
 
     @Test
     public void element1dVarTest2() {
+
         try {
 
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar y = makeIntVar(cp, -3, 10);
             IntVar z = makeIntVar(cp, -4, 40);
 
@@ -88,23 +91,22 @@ public class Element1DVarTest {
 
             cp.post(new Element1DVar(T, y, z));
 
-            assertEquals(0, y.getMin());
-            assertEquals(4, y.getMax());
+            assertEquals(0, y.min());
+            assertEquals(4, y.max());
 
-            System.out.println(z);
-            assertEquals(1, z.getMin());
-            assertEquals(10, z.getMax());
+            assertEquals(1, z.min());
+            assertEquals(10, z.max());
 
             y.removeAbove(2);
             cp.fixPoint();
 
-            assertEquals(6, z.getMax());
+            assertEquals(6, z.max());
 
             y.assign(2);
             cp.fixPoint();
 
-            assertEquals(5, z.getMin());
-            assertEquals(6, z.getMax());
+            assertEquals(5, z.min());
+            assertEquals(6, z.max());
 
 
         } catch (InconsistencyException e) {
@@ -117,9 +119,10 @@ public class Element1DVarTest {
 
     @Test
     public void element1dVarTest3() {
+
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar y = makeIntVar(cp, -3, 10);
             IntVar z = makeIntVar(cp, -20, 40);
 
@@ -127,13 +130,13 @@ public class Element1DVarTest {
 
             cp.post(new Element1DVar(T, y, z));
 
-            DFSearch dfs = new DFSearch(cp.getTrail(), firstFail(y, z));
+            DFSearch dfs = makeDfs(cp, firstFail(y, z));
             dfs.onSolution(() ->
-                    assertEquals(T[y.getMin()].getMin(), z.getMin())
+                    assertEquals(T[y.min()].min(), z.min())
             );
-            SearchStatistics stats = dfs.start();
+            SearchStatistics stats = dfs.solve();
 
-            assertEquals(5, stats.nSolutions);
+            assertEquals(5, stats.numberOfSolutions());
 
 
         } catch (InconsistencyException e) {

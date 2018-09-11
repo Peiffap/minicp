@@ -10,25 +10,32 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
-import minicp.engine.core.Constraint;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.util.InconsistencyException;
 
-public class TableDecomp extends Constraint {
-    private IntVar[] x;
-    private int[][] table;
+public class TableDecomp extends AbstractConstraint {
+    private final IntVar[] x;
+    private final int[][] table;
 
     /**
-     * Table constraint. Assignment of x_0=v_0, x_1=v_1,... only valid if there exists a
-     * row (v_0, v_1, ...) in the table.
+     * Decomposition of a table constraint.
+     * <p>The table constraint ensures that
+     * {@code x} is a row from the given table.
+     * More exactly, there exist some row <i>i</i>
+     * such that
+     * {@code x[0]==table[i][0], x[1]==table[i][1], etc}.
+     * <p>This constraint is sometimes called <i>in extension</i> constraint
+     * as the user enumerates the set of solutions that can be taken
+     * by the variables.
      *
-     * @param x     variables to constraint. x.length must be > 0.
-     * @param table array of valid solutions (second dimension must be of same size as the array x)
+     * @param x  the non empty set of variables to constraint
+     * @param table the possible set of solutions for x.
+     *              The second dimension must be of the same size as the array x.
      */
     public TableDecomp(IntVar[] x, int[][] table) {
         super(x[0].getSolver());
@@ -37,16 +44,16 @@ public class TableDecomp extends Constraint {
     }
 
     @Override
-    public void post() throws InconsistencyException {
+    public void post() {
         for (IntVar var : x)
             var.propagateOnDomainChange(this);
         propagate();
     }
 
     @Override
-    public void propagate() throws InconsistencyException {
+    public void propagate() {
         for (int i = 0; i < x.length; i++) {
-            for (int v = x[i].getMin(); v <= x[i].getMax(); v++) {
+            for (int v = x[i].min(); v <= x[i].max(); v++) {
                 if (x[i].contains(v)) {
                     boolean valueIsSupported = false;
                     for (int tupleIdx = 0; tupleIdx < table.length && !valueIsSupported; tupleIdx++) {

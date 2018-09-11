@@ -10,69 +10,88 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.core;
 
-import minicp.reversible.Trail;
-import minicp.util.InconsistencyException;
+import minicp.search.Objective;
+import minicp.state.StateManager;
+import minicp.util.Procedure;
 
-import java.util.Stack;
-import java.util.Vector;
+public interface Solver {
 
-public class Solver {
+    /**
+     * Posts the constraint, that is call {@link Constraint#post()} and
+     * computes the fix-point.
+     * A {@link minicp.util.exception.InconsistencyException} is thrown
+     * if by posting the constraint it is proven that there is no solution.
+     *
+     * @param c the constraint to be posted
+     */
+    void post(Constraint c);
 
-    private Trail trail = new Trail();
-    private Stack<Constraint> propagationQueue = new Stack<>();
-    private Vector<IntVar>  vars = new Vector<>(2);
-    public void registerVar(IntVar x) {
-        vars.add(x);
-    }
+    /**
+     * Schedules the constraint to be propagated by the fix-point.
+     *
+     * @param c the constraint to be scheduled
+     */
+    void schedule(Constraint c);
 
-    public void push() { trail.push();}
-    public void pop()  { trail.pop();}
+    /**
+     * Posts the constraint that is call {@link Constraint#post()}
+     * and optionally computes the fix-point.
+     * A {@link minicp.util.exception.InconsistencyException} is thrown
+     * if by posting the constraint it is proven that there is no solution.
+     * @param c the constraint to be posted
+     * @param enforceFixPoint is one wants to compute the fix-point after
+     */
+    void post(Constraint c, boolean enforceFixPoint);
 
-    public Trail getTrail() { return trail;}
+    /**
+     * Computes the fix-point with all the scheduled constraints.
+     */
+    void fixPoint();
 
+    /**
+     * Returns the state manager in charge of the global
+     * state of the solver.
+     *
+     * @return the state manager
+     */
+    StateManager getStateManager();
 
-    public void schedule(Constraint c) {
-        if (!c.scheduled && c.isActive()) {
-            c.scheduled = true;
-            propagationQueue.add(c);
-        }
-    }
+    /**
+     * Adds a listener called whenever the fix-point.
+     *
+     * @param listener the listener that is called whenever the fix-point is started
+     */
+    void onFixPoint(Procedure listener);
 
-    public void fixPoint() throws InconsistencyException {
-        boolean failed = false;
-        while (!propagationQueue.isEmpty()) {
-            Constraint c = propagationQueue.pop();
-            c.scheduled = false;
-            if (!failed) {
-                try {
-                    if (c.isActive())
-                        c.propagate();
-                } catch (InconsistencyException e) {
-                    failed = true;
-                }
-            }
-        }
-        if (failed) throw new InconsistencyException();
-    }
+    /**
+     * Creates a minimization objective on the given variable.
+     *
+     * @param x the variable to minimize
+     * @return an objective that can minimize x
+     * @see minicp.search.DFSearch#optimize(Objective)
+     */
+    Objective minimize(IntVar x);
 
-    public void post(Constraint c) throws InconsistencyException {
-        post(c,true);
-    }
+    /**
+     * Creates a maximization objective on the given variable.
+     *
+     * @param x the variable to maximize
+     * @return an objective that can maximize x
+     * @see minicp.search.DFSearch#optimize(Objective)
+     */
+    Objective maximize(IntVar x);
 
-    public void post(Constraint c, boolean enforceFixPoint) throws InconsistencyException {
-        c.post();
-        if (enforceFixPoint) fixPoint();
-    }
-
-    public void post(BoolVar b) throws InconsistencyException {
-        b.assign(true);
-        fixPoint();
-    }
-
+    /**
+     * Forces the boolean variable to be true and then
+     * computes the fix-point.
+     *
+     * @param b the variable that must be set to true
+     */
+    void post(BoolVar b);
 }
 

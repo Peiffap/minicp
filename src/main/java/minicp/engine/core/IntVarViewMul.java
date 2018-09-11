@@ -10,23 +10,26 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 
 package minicp.engine.core;
 
 
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.Procedure;
+import minicp.util.exception.InconsistencyException;
 
+/**
+ * A view on a variable of type {@code a*x}
+ */
 public class IntVarViewMul implements IntVar {
 
     private final int a;
     private final IntVar x;
 
     public IntVarViewMul(IntVar x, int a) {
-        assert(a > 0);
+        assert (a > 0);
         this.a = a;
         this.x = x;
     }
@@ -37,18 +40,18 @@ public class IntVarViewMul implements IntVar {
     }
 
     @Override
-    public void whenDomainChange(ConstraintClosure.Filtering c) {
-        x.whenDomainChange(c);
+    public void whenBind(Procedure f) {
+        x.whenBind(f);
     }
 
     @Override
-    public void whenBind(ConstraintClosure.Filtering c) {
-        x.whenBind(c);
+    public void whenBoundsChange(Procedure f) {
+        x.whenBoundsChange(f);
     }
 
     @Override
-    public void whenBoundsChange(ConstraintClosure.Filtering c) {
-        x.whenBoundsChange(c);
+    public void whenDomainChange(Procedure f) {
+        x.whenDomainChange(f);
     }
 
     @Override
@@ -67,23 +70,31 @@ public class IntVarViewMul implements IntVar {
     }
 
     @Override
-    public int getMin() {
-        return a * x.getMin();
+    public int min() {
+        if (a >= 0)
+            return a * x.min();
+        else return a * x.max();
     }
 
     @Override
-    public int getMax() {
-        return a * x.getMax();
+    public int max() {
+        if (a >= 0)
+            return a * x.max();
+        else return a * x.min();
     }
 
     @Override
-    public int getSize() {
-        return x.getSize();
+    public int size() {
+        return x.size();
     }
 
     @Override
     public int fillArray(int[] dest) {
-        throw new NotImplementedException("implement fillArray in IntVarViewMul");
+        int s = x.fillArray(dest);
+        for (int i = 0; i < s; i++) {
+            dest[i] *= a;
+        }
+        return s;
     }
 
     @Override
@@ -97,14 +108,14 @@ public class IntVarViewMul implements IntVar {
     }
 
     @Override
-    public void remove(int v) throws InconsistencyException {
+    public void remove(int v) {
         if (v % a == 0) {
             x.remove(v / a);
         }
     }
 
     @Override
-    public void assign(int v) throws InconsistencyException {
+    public void assign(int v) {
         if (v % a == 0) {
             x.assign(v / a);
         } else {
@@ -113,15 +124,14 @@ public class IntVarViewMul implements IntVar {
     }
 
     @Override
-    public int removeBelow(int v) throws InconsistencyException {
-        return (x.removeBelow(ceilDiv(v, a))) * a;
+    public void removeBelow(int v) {
+        x.removeBelow(ceilDiv(v, a));
     }
 
     @Override
-    public int removeAbove(int v) throws InconsistencyException {
-        return (x.removeAbove(floorDiv(v, a))) * a;
+    public void removeAbove(int v) {
+        x.removeAbove(floorDiv(v, a));
     }
-
 
     // Java's division always rounds to the integer closest to zero, but we need flooring/ceiling versions.
     private int floorDiv(int a, int b) {
@@ -132,5 +142,21 @@ public class IntVarViewMul implements IntVar {
     private int ceilDiv(int a, int b) {
         int q = a / b;
         return (a > 0 && q * b != a) ? q + 1 : q;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("{");
+        for (int i = min(); i <= max() - 1; i++) {
+            if (contains((i))) {
+                b.append(i);
+                b.append(',');
+            }
+        }
+        if (size() > 0) b.append(max());
+        b.append("}");
+        return b.toString();
+
     }
 }

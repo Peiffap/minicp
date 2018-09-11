@@ -15,11 +15,13 @@
 
 package minicp.engine.constraints;
 
-import minicp.engine.core.Constraint;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.util.InconsistencyException;
 
-public class LessOrEqual extends Constraint { // x <= y
+/**
+ * Less or equal constraint between two variables
+ */
+public class LessOrEqual extends AbstractConstraint { // x <= y
 
     private final IntVar x;
     private final IntVar y;
@@ -31,18 +33,17 @@ public class LessOrEqual extends Constraint { // x <= y
     }
 
     @Override
-    public void post() throws InconsistencyException {
+    public void post() {
         x.propagateOnBoundChange(this);
         y.propagateOnBoundChange(this);
         propagate();
     }
 
     @Override
-    public void propagate() throws InconsistencyException {
-        x.removeAbove(y.getMax());
-        y.removeBelow(x.getMin());
-        if (x.getMax() <= y.getMin()) {
-            this.deactivate();
-        }
+    public void propagate() {
+        x.removeAbove(y.max());
+        y.removeBelow(x.min());
+        if (x.max() <= y.min())
+            setActive(false);
     }
 }

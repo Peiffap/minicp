@@ -15,29 +15,34 @@
 
 package minicp.engine.constraints;
 
-import minicp.engine.core.Constraint;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.engine.core.Solver;
+import minicp.util.exception.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 
 import static minicp.cp.Factory.minus;
 
-public class NegTableCT extends Constraint {
+/**
+ * Negative table constraint
+ */
+public class NegTableCT extends AbstractConstraint {
+
     private IntVar[] x; //variables
     private int[][] table; //the table
-    // conficts[i][v] is the set of tuples such that x[i]=v
+    //supports[i][v] is the set of tuples supported by x[i]=v
     private BitSet[][] conflicts;
 
     /**
      * Negative Table constraint.
-     * Assignment of x_0=v_0, x_1=v_1,... is forbidden
-     * for every row (v_0, v_1, ...) in the table.
+     * <p>Assignment of {@code x_0=v_0, x_1=v_1,...} only valid if there does not
+     * exists a row {@code (v_0, v_1, ...)} in the table.
+     * The table represents the infeasible assignments for the variables.
      *
-     * @param x     variables to constraint. x.length must be > 0.
-     * @param table array of forbidden solutions (second dimension must be of same size as the array x)
+     * @param x the variables to constraint. x is not empty.
+     * @param table the array of invalid solutions (second dimension must be of same size as the array x)
      */
     public NegTableCT(IntVar[] x, int[][] table) {
         super(x[0].getSolver());
@@ -46,12 +51,12 @@ public class NegTableCT extends Constraint {
 
         // remove duplicate (the negative ct algo does not support it)
         ArrayList<int[]> tableList = new ArrayList<>();
-        boolean [] duplicate = new boolean[table.length];
+        boolean[] duplicate = new boolean[table.length];
         for (int i = 0; i < table.length; i++) {
             if (!duplicate[i]) {
                 tableList.add(table[i]);
                 for (int j = i + 1; j < table.length; j++) {
-                    if (i != j & !duplicate[j]) {
+                    if (i != j && !duplicate[j]) {
                         boolean same = true;
                         for (int k = 0; k < x.length; k++) {
                             same &= table[i][k] == table[j][k];
@@ -65,32 +70,34 @@ public class NegTableCT extends Constraint {
         }
         this.table = tableList.toArray(new int[0][]);
 
-        // Allocate conflicts
+        // Allocate supportedByVarVal
         conflicts = new BitSet[x.length][];
         for (int i = 0; i < x.length; i++) {
-            // map the variables domain to start at index 0
-            this.x[i] = minus(x[i],x[i].getMin());
-            conflicts[i] = new BitSet[x[i].getMax() - x[i].getMin() + 1];
+            this.x[i] = minus(x[i], x[i].min()); // map the variables domain to start at 0
+            conflicts[i] = new BitSet[x[i].max() - x[i].min() + 1];
             for (int j = 0; j < conflicts[i].length; j++)
                 conflicts[i][j] = new BitSet();
         }
 
+        // Set values in supportedByVarVal, which contains all the tuples supported by each var-val pair
         for (int i = 0; i < this.table.length; i++) { //i is the index of the tuple (in table)
             for (int j = 0; j < x.length; j++) { //j is the index of the current variable (in x)
                 if (x[j].contains(this.table[i][j])) {
-                    conflicts[j][this.table[i][j] - x[j].getMin()].set(i);
+                    conflicts[j][this.table[i][j] - x[j].min()].set(i);
                 }
             }
         }
     }
 
     @Override
-    public void post() throws InconsistencyException {
-        throw new NotImplementedException("NegTableCT");
+    public void post() {
+        // TODO
+         throw new NotImplementedException("NegTableCT");
     }
 
     @Override
-    public void propagate() throws InconsistencyException {
-        throw new NotImplementedException("NegTableCT");
+    public void propagate() {
+        // TODO
+         throw new NotImplementedException("NegTableCT");
     }
 }

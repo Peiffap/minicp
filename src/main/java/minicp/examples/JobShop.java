@@ -19,20 +19,21 @@ import minicp.engine.constraints.Disjunctive;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
+import minicp.search.Objective;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
+import minicp.util.exception.InconsistencyException;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.StringTokenizer;
 
+import static minicp.cp.BranchingScheme.firstFail;
 import static minicp.cp.Factory.*;
-import static minicp.cp.Heuristics.firstFail;
 
 /**
- * JobShop Problem
- * https://en.wikipedia.org/wiki/Job_shop_scheduling
+ * The JobShop Problem.
+ * <a href="https://en.wikipedia.org/wiki/Job_shop_scheduling">Wikipedia.</a>
  */
 public class JobShop {
 
@@ -40,12 +41,12 @@ public class JobShop {
         return Arrays.stream(x).flatMap(Arrays::stream).toArray(IntVar[]::new);
     }
 
-    public static void main(String[] args) throws InconsistencyException {
+    public static void main(String[] args) {
 
         // Reading the data
 
         try {
-            FileInputStream istream = new FileInputStream("data/jobshop/sascha/jobshop-4-4-0");
+            FileInputStream istream = new FileInputStream("data/jobshop/sascha/jobshop-7-7-4");
             BufferedReader in = new BufferedReader(new InputStreamReader(istream));
             in.readLine();
             in.readLine();
@@ -57,13 +58,13 @@ public class JobShop {
             System.out.println(nJobs + " " + nMachines);
             int[][] duration = new int[nJobs][nMachines];
             int[][] machine = new int[nJobs][nMachines];
-            int H = 0;
+            int horizon = 0;
             for (int i = 0; i < nJobs; i++) {
                 tokenizer = new StringTokenizer(in.readLine());
                 for (int j = 0; j < nMachines; j++) {
                     machine[i][j] = Integer.parseInt(tokenizer.nextToken());
                     duration[i][j] = Integer.parseInt(tokenizer.nextToken());
-                    H += duration[i][j];
+                    horizon += duration[i][j];
                 }
             }
 
@@ -71,8 +72,8 @@ public class JobShop {
 
             IntVar[][] start = new IntVar[nJobs][nMachines];
             IntVar[][] end = new IntVar[nJobs][nMachines];
-            ArrayList<IntVar> [] startOnMachine = new ArrayList[nMachines];
-            ArrayList<Integer> [] durationsOnMachine = new ArrayList[nMachines];
+            ArrayList<IntVar>[] startOnMachine = new ArrayList[nMachines];
+            ArrayList<Integer>[] durationsOnMachine = new ArrayList[nMachines];
             for (int m = 0; m < nMachines; m++) {
                 startOnMachine[m] = new ArrayList<IntVar>();
                 durationsOnMachine[m] = new ArrayList<Integer>();
@@ -83,44 +84,44 @@ public class JobShop {
 
                 for (int j = 0; j < nMachines; j++) {
 
-                    start[i][j] = makeIntVar(cp,0,H);
-                    end[i][j] = plus(start[i][j],duration[i][j]);
+                    start[i][j] = makeIntVar(cp, 0, horizon);
+                    end[i][j] = plus(start[i][j], duration[i][j]);
                     int m = machine[i][j];
                     startOnMachine[m].add(start[i][j]);
                     durationsOnMachine[m].add(duration[i][j]);
 
                     if (j > 0) {
                         // precedence constraint
-                        cp.post(lessOrEqual(end[i][j-1],start[i][j]));
+                        cp.post(lessOrEqual(end[i][j - 1], start[i][j]));
                     }
                 }
-                endLast[i] = end[i][nMachines-1];
+                endLast[i] = end[i][nMachines - 1];
             }
 
 
             for (int m = 0; m < nMachines; m++) {
 
-                int [] durations = new int[nJobs];
+                int[] durations = new int[nJobs];
                 for (int i = 0; i < nJobs; i++) {
                     durations[i] = durationsOnMachine[m].get(i);
                 }
                 IntVar[] starts = startOnMachine[m].toArray(new IntVar[]{});
-                cp.post(new Disjunctive(starts,durations));
+                cp.post(new Disjunctive(starts, durations));
             }
 
             IntVar makespan = maximum(endLast);
 
 
+            Objective obj = cp.minimize(makespan);
+
             DFSearch dfs = makeDfs(cp, firstFail(flatten(start)));
 
-
-            cp.post(minimize(makespan, dfs));
 
             dfs.onSolution(() ->
                     System.out.println("makespan:" + makespan)
             );
 
-            SearchStatistics stats = dfs.start();
+            SearchStatistics stats = dfs.optimize(obj);
 
             System.out.format("Statistics: %s\n", stats);
 

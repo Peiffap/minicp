@@ -10,18 +10,22 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
 import minicp.engine.core.IntVar;
 
+/**
+ * Compute and Maintain a Maximum Matching
+ * in the variable-value graph
+ */
 public class MaximumMatching {
 
-    public static final int NONE = Integer.MIN_VALUE;
+    public static final int NONE = -Integer.MIN_VALUE;
 
-    // For each variable, the value it is mached to
+    // For each variable, the setValue it is mached to
     private int[] match;
     private int[] varSeen;
 
@@ -30,7 +34,7 @@ public class MaximumMatching {
 
     // Number of values
     private int valSize;
-    // For each value, the variable idx matched to this value, -1 if none of them
+    // For each setValue, the variable idx matched to this setValue, -1 if none of them
     private int[] valMatch;
     private int[] valSeen;
 
@@ -44,13 +48,13 @@ public class MaximumMatching {
     public MaximumMatching(IntVar... x) {
         this.x = x;
 
-        // find value ranges
+        // find setValue ranges
 
         min = Integer.MAX_VALUE;
         max = Integer.MIN_VALUE;
         for (int i = 0; i < x.length; i++) {
-            min = Math.min(min, x[i].getMin());
-            max = Math.max(max, x[i].getMax());
+            min = Math.min(min, x[i].min());
+            max = Math.max(max, x[i].max());
         }
         valSize = max - min + 1;
         valMatch = new int[valSize];
@@ -71,7 +75,7 @@ public class MaximumMatching {
     }
 
 
-    public int compute(int [] result) {
+    public int compute(int[] result) {
         for (int k = 0; k < x.length; k++) {
             if (match[k] != NONE) {
                 if (!x[k].contains(match[k])) {
@@ -89,13 +93,12 @@ public class MaximumMatching {
     }
 
 
-
     private void findInitialMatching() { //returns the size of the maximum matching
         sizeMatching = 0;
         for (int k = 0; k < x.length; k++) {
-            int mx = x[k].getMin();
-            int Mx = x[k].getMax();
-            for (int i = mx; i <= Mx; i++)
+            int minv = x[k].min();
+            int maxv = x[k].max();
+            for (int i = minv; i <= maxv; i++)
                 if (valMatch[i - min] < 0) // unmatched
                     if (x[k].contains(i)) {
                         match[k] = i;
@@ -123,9 +126,9 @@ public class MaximumMatching {
     private boolean findAlternatingPathFromVar(int i) {
         if (varSeen[i] != magic) {
             varSeen[i] = magic;
-            int mx = x[i].getMin();
-            int Mx = x[i].getMax();
-            for (int v = mx; v <= Mx; v++) {
+            int xMin = x[i].min();
+            int xMax = x[i].max();
+            for (int v = xMin; v <= xMax; v++) {
                 if (match[i] != v) {
                     if (x[i].contains(v)) {
                         if (findAlternatingPathFromVal(v)) {
@@ -140,8 +143,7 @@ public class MaximumMatching {
         return false;
     }
 
-    private boolean findAlternatingPathFromVal
-            (int v) {
+    private boolean findAlternatingPathFromVal(int v) {
         if (valSeen[v - min] != magic) {
             valSeen[v - min] = magic;
             if (valMatch[v - min] == -1)

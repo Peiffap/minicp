@@ -15,55 +15,56 @@
 
 package minicp.examples;
 
+import minicp.cp.Factory;
+import minicp.engine.constraints.TableDecomp;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
+import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.InputReader;
+import minicp.util.io.InputReader;
 
 import java.util.Arrays;
 
+import static minicp.cp.BranchingScheme.and;
+import static minicp.cp.BranchingScheme.firstFail;
 import static minicp.cp.Factory.*;
-import static minicp.cp.Heuristics.and;
-import static minicp.cp.Heuristics.firstFail;
 
 /**
- * https://en.wikipedia.org/wiki/Eternity_II_puzzle
- * The Eternity II puzzle is an edge-matching puzzle which involves placing nxm square puzzle pieces
- * into a n by m grid, constrained by the requirement to match adjacent edges.
+ *
+ *  The Eternity II puzzle is an edge-matching puzzle which
+ *  involves placing 256 square puzzle pieces into a 16 by 16 grid,
+ *  constrained by the requirement to match adjacent edges.
+ *  <a href="https://en.wikipedia.org/wiki/Eternity_II_puzzle">Wikipedia.</a>
  */
 public class Eternity {
 
-    public static IntVar[] flatten(IntVar [][] x) {
+    public static IntVar[] flatten(IntVar[][] x) {
         return Arrays.stream(x).flatMap(Arrays::stream).toArray(IntVar[]::new);
     }
 
-    public static void main(String[] args) throws InconsistencyException {
+    public static void main(String[] args) {
 
-        // Read the data
+        // Reading the data
 
-        InputReader reader = new InputReader("data/eternity7x7.txt");
+        InputReader reader = new InputReader("data/eternity/eternity7x7.txt");
 
         int n = reader.getInt();
         int m = reader.getInt();
 
-        int [][] pieces = new int[n*m][4];
-        int max_ = 0;
+        int[][] pieces = new int[n * m][4];
+        int maxTmp = 0;
 
-        for (int i = 0; i < n*m; i++) {
+        for (int i = 0; i < n * m; i++) {
             for (int j = 0; j < 4; j++) {
                 pieces[i][j] = reader.getInt();
-                if (pieces[i][j] > max_)
-                    max_ = pieces[i][j];
+                if (pieces[i][j] > maxTmp)
+                    maxTmp = pieces[i][j];
             }
+            System.out.println(Arrays.toString(pieces[i]));
         }
-        final int max = max_;
+        final int max = maxTmp;
 
         // ------------------------
-
-        // Table with all pieces and for each their 4 possible rotations
-
-        int [][] table = new int[4*n*m][5];
 
         // TODO: create the table where each line correspond to one possible rotation of a piece
         // For instance if the line piece[6] = [2,3,5,1]
@@ -73,10 +74,12 @@ public class Eternity {
         // [6,5,1,2,3] // rotation of 180°
         // [6,1,2,3,5] // rotation of 270°
 
+        // Table with makeIntVarArray pieces and for each their 4 possible rotations
+
+        int[][] table = new int[4 * n * m][5];
+        
 
         Solver cp = makeSolver();
-
-        // Create the variables making sure that common edges share the same instance variable)
 
         //   |         |
         // - +---------+- -
@@ -87,33 +90,34 @@ public class Eternity {
         //   |         |
 
 
-        IntVar[][] id = new IntVar[n][m]; // id variables
-        IntVar[][] u = new IntVar[n][m];  // up side variables
-        IntVar[][] r = new IntVar[n][m];  // right side variables
-        IntVar[][] d = new IntVar[n][m];  // down side variables
-        IntVar[][] l = new IntVar[n][m];  // left side variable
-
+        IntVar[][] id = new IntVar[n][m]; // id
+        IntVar[][] u = new IntVar[n][m];  // up
+        IntVar[][] r = new IntVar[n][m];  // right
+        IntVar[][] d = new IntVar[n][m];  // down
+        IntVar[][] l = new IntVar[n][m];  // left
 
         for (int i = 0; i < n; i++) {
-            u[i] = makeIntVarArray(cp,m,j -> makeIntVar(cp,0,max));
-            id[i] = makeIntVarArray(cp,m,n*m);
+            u[i] = Factory.makeIntVarArray(m, j -> makeIntVar(cp, 0, max));
+            id[i] = makeIntVarArray(cp, m, n * m);
         }
         for (int k = 0; k < n; k++) {
             final int i = k;
-            if (i < n-1) d[i] = u[i+1];
-            else d[i] = makeIntVarArray(cp,m,j -> makeIntVar(cp,0,max));
+            if (i < n - 1) d[i] = u[i + 1];
+            else d[i] = Factory.makeIntVarArray(m, j -> makeIntVar(cp, 0, max));
         }
         for (int j = 0; j < m; j++) {
             for (int i = 0; i < n; i++) {
-                l[i][j] = makeIntVar(cp,0,max);
+                l[i][j] = makeIntVar(cp, 0, max);
             }
         }
         for (int j = 0; j < m; j++) {
             for (int i = 0; i < n; i++) {
-                if (j < m-1) r[i][j] = l[i][j+1];
-                else r[i][j] = makeIntVar(cp,0,max);
+                if (j < m - 1) r[i][j] = l[i][j + 1];
+                else r[i][j] = makeIntVar(cp, 0, max);
             }
         }
+
+        // The constraints of the problem
 
         // TODO: State the constraints of the problem
 
@@ -123,41 +127,45 @@ public class Eternity {
 
         // Constraint3: place "0" one all external side of the border (gray color)
 
+        
+
 
         // The search using the and combinator
 
-        SearchStatistics stats = makeDfs(cp,
-                and(firstFail(flatten((id))),
-                        firstFail(flatten(u))
-                        /* TODO: continue, are you branching on all the variables ? */
-                )
-        ).onSolution(() -> {
+        DFSearch dfs = makeDfs(cp,
+                /* TODO: continue, are you branching on all the variables ? */
+                 and(firstFail(flatten((id))), firstFail(flatten(u)))
+        );
+
+
+        dfs.onSolution(() -> {
             // Pretty Print
             for (int i = 0; i < n; i++) {
                 String line = "   ";
                 for (int j = 0; j < m; j++) {
-                    line += u[i][j].getMin() + "   ";
+                    line += u[i][j].min() + "   ";
                 }
                 System.out.println(line);
                 line = " ";
                 for (int j = 0; j < m; j++) {
-                    line += l[i][j].getMin() + "   ";
+                    line += l[i][j].min() + "   ";
                 }
-                line += r[i][m - 1].getMin();
+                line += r[i][m - 1].min();
                 System.out.println(line);
             }
             String line = "   ";
             for (int j = 0; j < m; j++) {
-                line += d[n - 1][j].getMin() + "   ";
+                line += d[n - 1][j].min() + "   ";
             }
             System.out.println(line);
 
-        }).start(statistics -> statistics.nSolutions == 1);
+        });
 
-        System.out.format("#Solutions: %s\n", stats.nSolutions);
+
+        SearchStatistics stats = dfs.solve(statistics -> statistics.numberOfSolutions() == 1);
+
+        System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
         System.out.format("Statistics: %s\n", stats);
 
     }
-
-
 }

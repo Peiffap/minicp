@@ -15,21 +15,23 @@
 
 package minicp.engine.constraints;
 
-import minicp.engine.core.Constraint;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.NotImplementedException;
 
-public class Absolute extends Constraint {
+/**
+ * Absolute value constraint
+ */
+public class Absolute extends AbstractConstraint {
 
-    private IntVar x;
-    private IntVar y;
+    private final IntVar x;
+    private final IntVar y;
 
     /**
-     * Build a constraint y = |x|
+     * Creates the absolute value constraint {@code y = |x|}.
      *
-     * @param x
-     * @param y
+     * @param x the input variable such that its absolut value is equal to y
+     * @param y the variable that represents the absolute value of x
      */
     public Absolute(IntVar x, IntVar y) {
         super(x.getSolver());
@@ -37,16 +39,16 @@ public class Absolute extends Constraint {
         this.y = y;
     }
 
-    @Override
-    public void post() throws InconsistencyException {
+    public void post() {
         // TODO
-        throw new NotImplementedException();
+         throw new NotImplementedException("Absolute");
     }
 
     @Override
-    public void propagate() throws InconsistencyException {
+    public void propagate() {
+        // y = |x|
         // TODO
-        throw new NotImplementedException();
+         throw new NotImplementedException("Absolute");
     }
 
 }

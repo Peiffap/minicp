@@ -15,8 +15,9 @@
 
 package minicp.util;
 
-import org.junit.Assume;
+import minicp.util.exception.NotImplementedException;
 import org.junit.Assert;
+import org.junit.Assume;
 
 public class NotImplementedExceptionAssume {
     public static boolean failOnNPE = System.getenv().getOrDefault("MINICP_TEST_FAIL_ON_NPE", "0").equals("1");

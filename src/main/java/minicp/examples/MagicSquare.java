@@ -10,44 +10,48 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.examples;
 
 
+import minicp.cp.Factory;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import static minicp.cp.Factory.*;
 
 import java.util.Arrays;
 
-import static minicp.cp.Heuristics.*;
+import static minicp.cp.BranchingScheme.firstFail;
+import static minicp.cp.Factory.*;
 
+/**
+ * The Magic Square problem.
+ * <a href="http://csplib.org/Problems/prob019/">CSPLib</a>.
+ */
 public class MagicSquare {
 
-    // https://en.wikipedia.org/wiki/Magic_square
-    public static void main(String[] args) throws InconsistencyException {
+    //
+    public static void main(String[] args) {
 
         int n = 6;
-        int M = n * (n * n + 1) / 2;
+        int sumResult = n * (n * n + 1) / 2;
 
-        Solver cp = new Solver();
+        Solver cp = Factory.makeSolver();
         IntVar[][] x = new IntVar[n][n];
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                x[i][j] = makeIntVar(cp, 1, n*n);
+                x[i][j] = makeIntVar(cp, 1, n * n);
             }
         }
 
 
-        IntVar [] xFlat = new IntVar[x.length * x.length];
+        IntVar[] xFlat = new IntVar[x.length * x.length];
         for (int i = 0; i < x.length; i++) {
-            System.arraycopy(x[i],0,xFlat,i * x.length,x.length);
+            System.arraycopy(x[i], 0, xFlat, i * x.length, x.length);
         }
 
 
@@ -56,7 +60,7 @@ public class MagicSquare {
 
         // Sum on lines
         for (int i = 0; i < n; i++) {
-            cp.post(sum(x[i],M));
+            cp.post(sum(x[i], sumResult));
         }
 
         // Sum on columns
@@ -64,7 +68,7 @@ public class MagicSquare {
             IntVar[] column = new IntVar[n];
             for (int i = 0; i < x.length; i++)
                 column[i] = x[i][j];
-            cp.post(sum(column,M));
+            cp.post(sum(column, sumResult));
         }
 
         // Sum on diagonals
@@ -72,21 +76,21 @@ public class MagicSquare {
         IntVar[] diagonalRight = new IntVar[n];
         for (int i = 0; i < x.length; i++) {
             diagonalLeft[i] = x[i][i];
-            diagonalRight[i] = x[n-i-1][i];
+            diagonalRight[i] = x[n - i - 1][i];
         }
-        cp.post(sum(diagonalLeft, M));
-        cp.post(sum(diagonalRight, M));
+        cp.post(sum(diagonalLeft, sumResult));
+        cp.post(sum(diagonalRight, sumResult));
 
+        DFSearch dfs = makeDfs(cp, firstFail(xFlat));
 
-
-        DFSearch dfs = makeDfs(cp,firstFail(xFlat)).onSolution(() -> {
+        dfs.onSolution(() -> {
                     for (int i = 0; i < n; i++) {
                         System.out.println(Arrays.toString(x[i]));
                     }
                 }
         );
 
-        SearchStatistics stats = dfs.start(stat -> stat.nSolutions >= 1); // stop on first solution
+        SearchStatistics stats = dfs.solve(stat -> stat.numberOfSolutions() >= 1); // stop on first solution
 
         System.out.println(stats);
     }

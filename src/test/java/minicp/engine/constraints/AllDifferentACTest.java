@@ -10,51 +10,48 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
+import static minicp.cp.BranchingScheme.*;
 import static minicp.cp.Factory.*;
-import static minicp.cp.Heuristics.firstFail;
-import static minicp.search.Selector.branch;
-import static minicp.search.Selector.selectMin;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 
-public class AllDifferentACTest {
+public class AllDifferentACTest extends SolverTest {
 
     @Test
     public void allDifferentTest1() {
 
-        Solver cp  = makeSolver();
+        Solver cp = solverFactory.get();
 
-        IntVar[] x = makeIntVarArray(cp,5,5);
+        IntVar[] x = makeIntVarArray(cp, 5, 5);
 
         try {
             cp.post(new AllDifferentAC(x));
-            equal(x[0],0);
+            equal(x[0], 0);
             for (int i = 1; i < x.length; i++) {
-                assertEquals(4,x[i].getSize());
-                assertEquals(1,x[i].getMin());
+                assertEquals(4, x[i].size());
+                assertEquals(1, x[i].min());
             }
 
         } catch (InconsistencyException e) {
-            assert(false);
+            assert (false);
         } catch (NotImplementedException e) {
             NotImplementedExceptionAssume.fail(e);
         }
@@ -64,34 +61,33 @@ public class AllDifferentACTest {
     @Test
     public void allDifferentTest2() {
 
-        Solver cp  = makeSolver();
+        Solver cp = solverFactory.get();
 
-        IntVar[] x = makeIntVarArray(cp,5,5);
+        IntVar[] x = makeIntVarArray(cp, 5, 5);
 
         try {
             cp.post(new AllDifferentAC(x));
 
-            SearchStatistics stats = makeDfs(cp,firstFail(x)).start();
-            assertEquals(120,stats.nSolutions);
+            SearchStatistics stats = makeDfs(cp, firstFail(x)).solve();
+            assertEquals(120, stats.numberOfSolutions());
 
         } catch (InconsistencyException e) {
-            assert(false);
+            assert (false);
         } catch (NotImplementedException e) {
             NotImplementedExceptionAssume.fail(e);
         }
     }
 
 
-
-    private static IntVar makeIVar(Solver cp, Integer ... values) {
-        return makeIntVar(cp,new HashSet<>(Arrays.asList(values)));
+    private static IntVar makeIVar(Solver cp, Integer... values) {
+        return makeIntVar(cp, new HashSet<>(Arrays.asList(values)));
     }
 
 
     @Test
     public void allDifferentTest3() {
         try {
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar[] x = new IntVar[]{
                     makeIVar(cp, 1, 2),
                     makeIVar(cp, 1, 2),
@@ -100,8 +96,8 @@ public class AllDifferentACTest {
 
             cp.post(new AllDifferentAC(x));
 
-            assertEquals(x[2].getMin(),3);
-            assertEquals(x[2].getSize(),2);
+            assertEquals(x[2].min(), 3);
+            assertEquals(x[2].size(), 2);
 
         } catch (InconsistencyException e) {
             fail("should not fail");
@@ -114,7 +110,7 @@ public class AllDifferentACTest {
     @Test
     public void allDifferentTest5() {
         try {
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar[] x = new IntVar[]{
                     makeIVar(cp, 1, 2, 3, 4, 5),
                     makeIVar(cp, 2),
@@ -129,12 +125,12 @@ public class AllDifferentACTest {
 
             cp.post(new AllDifferentAC(x));
 
-            assertEquals(x[0].getSize(),2);
-            assertEquals(x[2].getSize(),2);
-            assertEquals(x[4].getMin(),6);
-            assertEquals(x[7].getMin(),9);
-            assertEquals(x[8].getMin(),7);
-            assertEquals(x[8].getMax(),8);
+            assertEquals(x[0].size(), 2);
+            assertEquals(x[2].size(), 2);
+            assertEquals(x[4].min(), 6);
+            assertEquals(x[7].min(), 9);
+            assertEquals(x[8].min(), 7);
+            assertEquals(x[8].max(), 8);
 
         } catch (InconsistencyException e) {
             fail("should not fail");
@@ -146,40 +142,43 @@ public class AllDifferentACTest {
     @Test
     public void allDifferentTest6() {
         try {
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar[] x = new IntVar[]{
                     makeIVar(cp, 1, 2, 3, 4, 5),
-                    makeIVar(cp, 2,7),
+                    makeIVar(cp, 2, 7),
                     makeIVar(cp, 1, 2, 3, 4, 5),
-                    makeIVar(cp, 1,3),
+                    makeIVar(cp, 1, 3),
                     makeIVar(cp, 1, 2, 3, 4, 5, 6),
                     makeIVar(cp, 6, 7, 8),
-                    makeIVar(cp, 3,4,5),
+                    makeIVar(cp, 3, 4, 5),
                     makeIVar(cp, 6, 7, 8, 9),
                     makeIVar(cp, 6, 7, 8)};
             int[] matching = new int[x.length];
 
             cp.post(new AllDifferentAC(x));
 
-            DFSearch dfs = makeDfs(cp,selectMin(x,
-                    xi -> xi.getSize() > 1,
-                    xi -> -xi.getSize(),
-                    xi -> {
-                        int v = xi.getMin();
-                        return branch(
-                                () -> {
-                                    equal(xi,v);
-                                },
-                                () -> {
-                                    notEqual(xi,v);
-                                }
-                        );
-                    }
-            ));
-            SearchStatistics stats = dfs.start();
+            DFSearch dfs = makeDfs(cp, () -> {
+                IntVar xs = selectMin(x,
+                        xi -> xi.size() > 1,
+                        xi -> (float) -xi.size());
+                if (xs == null)
+                    return EMPTY;
+                else {
+                    int v = xs.min();
+                    return branch(
+                            () -> {
+                                equal(xs, v);
+                            },
+                            () -> {
+                                notEqual(xs, v);
+                            });
+                }
+            });
+
+            SearchStatistics stats = dfs.solve();
             // GAC filter with a single constraint should have no fail
-            assertEquals(0,stats.nFailures);
-            assertEquals(80,stats.nSolutions);
+            assertEquals(0, stats.numberOfFailures());
+            assertEquals(80, stats.numberOfSolutions());
 
 
         } catch (InconsistencyException e) {
@@ -189,20 +188,21 @@ public class AllDifferentACTest {
         }
     }
 
+
     @Test
     public void allDifferentTest7() {
         try {
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar[] x = new IntVar[]{
                     makeIVar(cp, 3, 4),
                     makeIVar(cp, 1),
-                    makeIVar(cp,  3, 4),
+                    makeIVar(cp, 3, 4),
                     makeIVar(cp, 0),
-                    makeIVar(cp,  3, 4, 5),
-                    makeIVar(cp, 5,6, 7),
-                    makeIVar(cp, 2,9,10),
-                    makeIVar(cp, 5,6, 7, 8),
-                    makeIVar(cp, 5,6, 7)};
+                    makeIVar(cp, 3, 4, 5),
+                    makeIVar(cp, 5, 6, 7),
+                    makeIVar(cp, 2, 9, 10),
+                    makeIVar(cp, 5, 6, 7, 8),
+                    makeIVar(cp, 5, 6, 7)};
             int[] matching = new int[x.length];
 
             cp.post(new AllDifferentAC(x));
@@ -215,7 +215,7 @@ public class AllDifferentACTest {
             assertTrue(!x[8].contains(5));
         } catch (InconsistencyException e) {
             fail("should not fail");
-        }  catch (NotImplementedException e) {
+        } catch (NotImplementedException e) {
             NotImplementedExceptionAssume.fail(e);
         }
     }

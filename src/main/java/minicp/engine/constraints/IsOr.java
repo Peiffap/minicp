@@ -10,28 +10,38 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.BoolVar;
-import minicp.engine.core.Constraint;
-import minicp.reversible.ReversibleInt;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.state.StateInt;
+import minicp.util.exception.NotImplementedException;
 
-public class IsOr extends Constraint { // b <=> x1 or x2 or ... xn
+/**
+ * Reified logical or constraint
+ */
+public class IsOr extends AbstractConstraint { // b <=> x1 or x2 or ... xn
 
     private final BoolVar b;
     private final BoolVar[] x;
     private final int n;
 
     private int[] unBounds;
-    private ReversibleInt nUnBounds;
+    private StateInt nUnBounds;
 
     private final Or or;
 
+    /**
+     * Creates a constraint such that
+     * the boolean b is true if and only if
+     * at least variable in x is true.
+     *
+     * @param b the boolean that is true if at least one variable in x is true
+     * @param x an non empty array of variables
+     */
     public IsOr(BoolVar b, BoolVar[] x) {
         super(b.getSolver());
         this.b = b;
@@ -39,7 +49,7 @@ public class IsOr extends Constraint { // b <=> x1 or x2 or ... xn
         this.n = x.length;
         or = new Or(x);
 
-        nUnBounds = new ReversibleInt(cp.getTrail(), n);
+        nUnBounds = getSolver().getStateManager().makeStateInt(n);
         unBounds = new int[n];
         for (int i = 0; i < n; i++) {
             unBounds[i] = i;
@@ -47,7 +57,7 @@ public class IsOr extends Constraint { // b <=> x1 or x2 or ... xn
     }
 
     @Override
-    public void post() throws InconsistencyException {
+    public void post() {
         b.propagateOnBind(this);
         for (BoolVar xi : x) {
             xi.propagateOnBind(this);
@@ -55,10 +65,8 @@ public class IsOr extends Constraint { // b <=> x1 or x2 or ... xn
     }
 
     @Override
-    public void propagate() throws InconsistencyException {
-
+    public void propagate() {
         // TODO Implement the constraint as efficiently as possible and make sure you pass all the tests
-
-       throw new NotImplementedException();
+         throw new NotImplementedException();
     }
 }

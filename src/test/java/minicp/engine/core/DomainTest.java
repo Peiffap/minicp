@@ -10,19 +10,18 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.core;
 
-import minicp.util.InconsistencyException;
+import minicp.engine.SolverTest;
 import org.junit.Test;
 
-import static minicp.cp.Factory.makeSolver;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 
-public class DomainTest {
+public class DomainTest extends SolverTest {
 
     private static class MyDomainListener implements DomainListener {
 
@@ -32,56 +31,61 @@ public class DomainTest {
         int nRemoveAbove = 0;
 
         @Override
+        public void empty() {
+        }
+
+        @Override
         public void bind() {
             nBind++;
         }
 
         @Override
-        public void change(int domainSize) {
+        public void change() {
             nChange++;
         }
 
         @Override
-        public void removeBelow(int domainSize) {
+        public void changeMin() {
             nRemoveBelow++;
         }
 
         @Override
-        public void removeAbove(int domainSize) {
+        public void changeMax() {
             nRemoveAbove++;
         }
-    };
+    }
 
+    ;
 
 
     @Test
-    public void testDomain1() throws InconsistencyException {
-        Solver cp  = makeSolver();
+    public void testDomain1() {
+        Solver cp = solverFactory.get();
         MyDomainListener dlistener = new MyDomainListener();
-        IntDomain dom = new SparseSetDomain(cp.getTrail(),5,10);
+        IntDomain dom = new SparseSetDomain(cp.getStateManager(), 5, 10);
 
-        dom.removeAbove(8,dlistener);
+        dom.removeAbove(8, dlistener);
 
         assertEquals(1, dlistener.nChange);
         assertEquals(0, dlistener.nBind);
         assertEquals(1, dlistener.nRemoveAbove);
         assertEquals(0, dlistener.nRemoveBelow);
 
-        dom.remove(6,dlistener);
+        dom.remove(6, dlistener);
 
         assertEquals(2, dlistener.nChange);
         assertEquals(0, dlistener.nBind);
         assertEquals(1, dlistener.nRemoveAbove);
         assertEquals(0, dlistener.nRemoveBelow);
 
-        dom.remove(5,dlistener);
+        dom.remove(5, dlistener);
 
         assertEquals(3, dlistener.nChange);
         assertEquals(0, dlistener.nBind);
         assertEquals(1, dlistener.nRemoveAbove);
         assertEquals(1, dlistener.nRemoveBelow);
 
-        dom.remove(7,dlistener);
+        dom.remove(7, dlistener);
 
         assertEquals(4, dlistener.nChange);
         assertEquals(1, dlistener.nBind);
@@ -91,12 +95,12 @@ public class DomainTest {
     }
 
     @Test
-    public void testDomain2() throws InconsistencyException {
-        Solver cp  = makeSolver();
+    public void testDomain2() {
+        Solver cp = solverFactory.get();
         MyDomainListener dlistener = new MyDomainListener();
-        IntDomain dom = new SparseSetDomain(cp.getTrail(),5,10);
+        IntDomain dom = new SparseSetDomain(cp.getStateManager(), 5, 10);
 
-        dom.removeAllBut(7,dlistener);
+        dom.removeAllBut(7, dlistener);
 
         assertEquals(1, dlistener.nChange);
         assertEquals(1, dlistener.nBind);
@@ -106,12 +110,12 @@ public class DomainTest {
     }
 
     @Test
-    public void testDomain3() throws InconsistencyException {
-        Solver cp  = makeSolver();
+    public void testDomain3() {
+        Solver cp = solverFactory.get();
         MyDomainListener dlistener = new MyDomainListener();
-        IntDomain dom = new SparseSetDomain(cp.getTrail(),5,10);
+        IntDomain dom = new SparseSetDomain(cp.getStateManager(), 5, 10);
 
-        dom.removeAbove(5,dlistener);
+        dom.removeAbove(5, dlistener);
 
         assertEquals(1, dlistener.nChange);
         assertEquals(1, dlistener.nBind);

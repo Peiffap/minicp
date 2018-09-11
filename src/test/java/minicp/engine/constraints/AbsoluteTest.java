@@ -15,41 +15,44 @@
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Test;
 
-import static minicp.cp.Factory.*;
+import static minicp.cp.Factory.makeIntVar;
+import static minicp.cp.Factory.notEqual;
 import static org.junit.Assert.*;
 
-public class AbsoluteTest {
+public class AbsoluteTest extends SolverTest {
 
 
     @Test
     public void simpleTest0() {
+
         try {
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -5, 5);
             IntVar y = makeIntVar(cp, -10, 10);
 
             cp.post(new Absolute(x, y));
 
-            assertEquals(0, y.getMin());
-            assertEquals(5, y.getMax());
-            assertEquals(11, x.getSize());
+            assertEquals(0, y.min());
+            assertEquals(5, y.max());
+            assertEquals(11, x.size());
 
             x.removeAbove(-2);
             cp.fixPoint();
 
-            assertEquals(2, y.getMin());
+            assertEquals(2, y.min());
 
             x.removeBelow(-4);
             cp.fixPoint();
 
-            assertEquals(4, y.getMax());
+            assertEquals(4, y.max());
 
         } catch (InconsistencyException e) {
             fail("should not fail");
@@ -60,9 +63,8 @@ public class AbsoluteTest {
 
     @Test
     public void simpleTest1() {
-
         try {
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -5, 5);
             IntVar y = makeIntVar(cp, -10, 10);
             notEqual(x, 0);
@@ -72,8 +74,8 @@ public class AbsoluteTest {
             cp.post(new Absolute(x, y));
 
 
-            assertEquals(1, y.getMin());
-            assertEquals(4, y.getMax());
+            assertEquals(1, y.min());
+            assertEquals(4, y.max());
 
         } catch (InconsistencyException e) {
             fail("should not fail");
@@ -82,10 +84,11 @@ public class AbsoluteTest {
         }
     }
 
+
     @Test
     public void simpleTest2() {
         try {
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -5, 0);
             IntVar y = makeIntVar(cp, 4, 4);
 
@@ -93,7 +96,7 @@ public class AbsoluteTest {
 
             assertTrue(x.isBound());
             assertTrue(y.isBound());
-            assertEquals(-4, x.getMax());
+            assertEquals(-4, x.max());
 
 
         } catch (InconsistencyException e) {
@@ -106,7 +109,7 @@ public class AbsoluteTest {
     @Test
     public void simpleTest3() {
         try {
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, 7, 7);
             IntVar y = makeIntVar(cp, -1000, 12);
 
@@ -114,7 +117,7 @@ public class AbsoluteTest {
 
             assertTrue(x.isBound());
             assertTrue(y.isBound());
-            assertEquals(7, y.getMax());
+            assertEquals(7, y.max());
 
 
         } catch (InconsistencyException e) {
@@ -127,14 +130,14 @@ public class AbsoluteTest {
     @Test
     public void simpleTest4() {
         try {
-            Solver cp = makeSolver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -5, 10);
             IntVar y = makeIntVar(cp, -6, 7);
 
             cp.post(new Absolute(x, y));
 
-            assertEquals(7, x.getMax());
-            assertEquals(-5, x.getMin());
+            assertEquals(7, x.max());
+            assertEquals(-5, x.min());
 
             notEqual(y, 0);
             cp.fixPoint();
@@ -142,12 +145,12 @@ public class AbsoluteTest {
             x.removeAbove(4);
             cp.fixPoint();
 
-            assertEquals(5, y.getMax());
+            assertEquals(5, y.max());
 
             x.removeAbove(-2);
             cp.fixPoint();
 
-            assertEquals(2, y.getMin());
+            assertEquals(2, y.min());
 
             y.removeBelow(5);
             cp.fixPoint();
@@ -162,5 +165,6 @@ public class AbsoluteTest {
             NotImplementedExceptionAssume.fail(e);
         }
     }
+
 
 }

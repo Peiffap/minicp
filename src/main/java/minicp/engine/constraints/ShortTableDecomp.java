@@ -15,23 +15,25 @@
 
 package minicp.engine.constraints;
 
-import minicp.engine.core.Constraint;
+import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.util.InconsistencyException;
 
-public class ShortTableDecomp extends Constraint {
-    private IntVar[] x;
-    private int[][] table;
+/**
+ * Decomposition of table constraint with short tuples (having {@code *} entries)
+ */
+public class ShortTableDecomp extends AbstractConstraint {
+
+    private final IntVar[] x;
+    private final int[][] table;
     private final int star; // considered as *
 
     /**
-     * Short Table constraint: Inefficient algorithm
-     * Assignment of x_0=v_0, x_1=v_1,... only valid if there exists a
+     * Table constraint. Assignment of x_0=v_0, x_1=v_1,... only valid if there exists a
      * row (v_0|*,v_1|*, ...) in the table.
      *
-     * @param x     variables to constraint. x.length must be > 0.
+     * @param x     variables to constraint, a non empty array
      * @param table array of valid solutions (second dimension must be of same size as the array x)
-     * @param star the symbol representing "any" value in the table
+     * @param star  the symbol representing "any" setValue in the table
      */
     public ShortTableDecomp(IntVar[] x, int[][] table, int star) {
         super(x[0].getSolver());
@@ -41,16 +43,16 @@ public class ShortTableDecomp extends Constraint {
     }
 
     @Override
-    public void post() throws InconsistencyException {
+    public void post() {
         for (IntVar var : x)
             var.propagateOnDomainChange(this);
         propagate();
     }
 
     @Override
-    public void propagate() throws InconsistencyException {
+    public void propagate() {
         for (int i = 0; i < x.length; i++) {
-            for (int v = x[i].getMin(); v <= x[i].getMax(); v++) {
+            for (int v = x[i].min(); v <= x[i].max(); v++) {
                 if (x[i].contains(v)) {
                     boolean valueIsSupported = false;
                     for (int tupleIdx = 0; tupleIdx < table.length && !valueIsSupported; tupleIdx++) {

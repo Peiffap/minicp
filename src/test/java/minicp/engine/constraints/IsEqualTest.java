@@ -10,76 +10,85 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with mini-cp. If not, see http://www.gnu.org/licenses/lgpl-3.0.en.html
  *
- * Copyright (c)  2017. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
+ * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
 package minicp.engine.constraints;
 
+import minicp.engine.SolverTest;
 import minicp.engine.core.BoolVar;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.InconsistencyException;
-import minicp.util.NotImplementedException;
+import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Test;
 
+import static minicp.cp.BranchingScheme.firstFail;
 import static minicp.cp.Factory.*;
-import static minicp.cp.Heuristics.firstFail;
 import static org.junit.Assert.*;
 
 
-public class IsEqualTest {
+public class IsEqualTest extends SolverTest {
 
     @Test
     public void test1() {
+        try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -4, 7);
 
             BoolVar b = isEqual(x, -2);
 
-            DFSearch search = new DFSearch(cp.getTrail(), firstFail(x));
+            DFSearch search = makeDfs(cp, firstFail(x));
 
-            SearchStatistics stats = search.start();
+            SearchStatistics stats = search.solve();
 
             search.onSolution(() ->
-                    assertEquals(-2 == x.getMin(), b.isTrue())
+                    assertEquals(-2 == x.min(), b.isTrue())
             );
 
-            assertEquals(12, stats.nSolutions);
+            assertEquals(12, stats.numberOfSolutions());
+
+
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
+        }
     }
 
     @Test
     public void test2() {
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -4, 7);
 
             BoolVar b = isEqual(x, -2);
 
-            cp.push();
+            cp.getStateManager().saveState();
             equal(b, 1);
-            assertEquals(-2, x.getMin());
-            cp.pop();
+            assertEquals(-2, x.min());
+            cp.getStateManager().restoreState();
 
-            cp.push();
+            cp.getStateManager().saveState();
             equal(b, 0);
             assertFalse(x.contains(-2));
-            cp.pop();
+            cp.getStateManager().restoreState();
 
         } catch (InconsistencyException e) {
             fail("should not fail");
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
         }
     }
 
     @Test
     public void test3() {
-        try {
 
-            Solver cp = new Solver();
+        try {
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -4, 7);
             equal(x, -2);
 
@@ -96,6 +105,8 @@ public class IsEqualTest {
 
         } catch (InconsistencyException e) {
             fail("should not fail");
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
         }
     }
 
@@ -103,25 +114,27 @@ public class IsEqualTest {
     public void test4() {
         try {
 
-            Solver cp = new Solver();
+            Solver cp = solverFactory.get();
             IntVar x = makeIntVar(cp, -4, 7);
             BoolVar b = makeBoolVar(cp);
 
-            cp.push();
+            cp.getStateManager().saveState();
             equal(b, 1);
             cp.post(new IsEqual(b, x, -2));
-            assertEquals(-2, x.getMin());
-            cp.pop();
+            assertEquals(-2, x.min());
+            cp.getStateManager().restoreState();
 
-            cp.push();
+            cp.getStateManager().saveState();
             equal(b, 0);
             cp.post(new IsEqual(b, x, -2));
             assertFalse(x.contains(-2));
-            cp.pop();
+            cp.getStateManager().restoreState();
 
 
         } catch (InconsistencyException e) {
             fail("should not fail");
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
         }
     }
 
