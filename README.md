@@ -88,5 +88,8 @@ Content
 
 
 
+=======
+* use IntelliJ IDE and open directly the maven project (file pom.xml)
+* website with technical documentation, exercises etc  www.bitbucket.org
 
 
