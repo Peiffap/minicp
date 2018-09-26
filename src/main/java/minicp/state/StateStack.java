@@ -39,7 +39,9 @@ public class StateStack<E> {
     }
 
     public void push(E elem) {
-        stack.set(size.value(), elem);
+        int s = size.value();
+        if (stack.size() > s) stack.set(s, elem);
+        else stack.add(elem);
         size.increment();
     }
 
