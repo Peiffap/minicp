@@ -76,6 +76,7 @@ public class GraphUtil {
         };
     }
 
+
     /**
      * Computes the strongly connected components of the graph
      * @param graph the input graph on which to compute the strongly
@@ -121,15 +122,14 @@ public class GraphUtil {
         // seen = 1
         // visited = 2
         // closed = 3
-        visited[start] = 1; //seen
         while (!todo.isEmpty()) {
             int cur = todo.peek();
-            if (visited[cur] == 1) {
+            if (visited[cur] == 0) {
+                visited[cur] = 1; //seen
                 action.accept(false, cur);
                 for (int next : graph.out(cur)) {
                     if (visited[next] == 0) {
                         todo.add(next);
-                        visited[next] = 1; //seen
                     }
                 }
                 visited[cur] = 2; //visited
@@ -138,6 +138,22 @@ public class GraphUtil {
                 visited[cur] = 3; //closed
                 todo.pop();
             }
+            else
+                todo.pop();
         }
+    }
+
+    /**
+     * Checks if a path exists between start and end
+     * @param graph
+     * @param start a node id from the graph
+     * @param end a node id from the graph
+     * @return true if a directed path from start to end exists, false otherwise
+     */
+    public static boolean pathExists(Graph graph, int start, int end) {
+        int[] visited = new int[graph.n()];
+        Arrays.fill(visited, 0);
+        dfsNode(graph,(v,n) -> {},visited,start);
+        return visited[end] != 0;
     }
 }
