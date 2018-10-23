@@ -96,8 +96,8 @@ public class Disjunctive extends AbstractConstraint {
         while (!fixed) {
             fixed = true;
             overLoadChecker();
-            fixed =  fixed || !detectablePrecedence();
-            fixed =  fixed || !notLast();
+            fixed =  fixed && !detectablePrecedence();
+            fixed =  fixed && !notLast();
         }
 
     }
