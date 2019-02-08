@@ -32,6 +32,12 @@ Be able to
 * Write unit-tests for constraints and models
 * Debug constraints, models, etc
 
+Theoretical Exercises
+=================================
+
+
+Some theoretical `quizz <https://inginious.org/course/minicp/>`_
+
 
 
 Less or equal reified constraint
