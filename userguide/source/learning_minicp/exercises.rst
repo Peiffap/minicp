@@ -1,78 +1,30 @@
 .. _minicp:
 
 
-******************************
-Exercises
-******************************
+**********************
+Unclassified Exercises
+**********************
 
-We propose a set of exercises to extend mini-cp with useful features.
-By doing these exercises you will gradually progress in your understanding of CP.
-For each exercise, we ask you to implement JUnit tests to make sure that
-your implementation works as expected.
-If you don't test each feature independently you take the risk to
-loose a lot of time finding very difficult bugs.
+These exercises are from the course given in 2017-2018 @UCLouvain.
+They are currently being refreshed, and separated into the various "parts" of the course.
 
-
-*We ask you not to publish your solutions on a public repository.
-The instructors interested to get the source-code of
-the solutions can contact us.*
-
-
-Learning Outcomes
-=======================================
-
-Be able to
-
-* Understand reversible data structures
-* Understand a domain
-* Implement global constraints
-* Implement custom search
-* Model CP easy problems
-* Use LNS
-* Write unit-tests for constraints and models
-* Debug constraints, models, etc
-
-Theoretical Exercises
-=================================
-
-
-Some theoretical `quizz <https://inginious.org/course/minicp/>`_
-
-
-
-Less or equal reified constraint
-=================================
-
-Implement `IsLessOrEqual.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/IsLessOrEqual.java?at=master>`_
-
-This is a reified constraint for `b iff x <= c`
-that is boolean variable `b` is set true if and only if `x` variable is less or equal to value `c`.
-
-For example the constraint holds for
-
-.. code-block:: java
-
-    b = true , x = 4, c = 5
-    b = false, x = 4, c = 2
-
-
-but is violated for
-
-.. code-block:: java
-
-    b = true , x = 5, c = 4
-    b = false, x = 2, c = 4
-
-
-Check that your implementation passes the tests `IsLessOrEqualTest.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/test/java/minicp/engine/constraints/IsEqualTest.java?at=master>`_
-
-
+..  Learning Outcomes
+    =======================================
+    Be able to
+    * Understand reversible data structures
+    * Understand a domain
+    * Implement global constraints
+    * Implement custom search
+    * Model CP easy problems
+    * Use LNS
+    * Write unit-tests for constraints and models
+    * Debug constraints, models, etc
 
 DFS Explicit Stack
 ===================
 
 
-The search algorithm of mini-cp is *depth-first-search*.
+The search algorithm of Mini-CP is *depth-first-search*.
 It is implemented using a recursive method in the class
 `DFSSearch.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/search/DFSearch.java?at=master>`_.
 To avoid any `stack-overflow` exception due to too a deep recursion in Java
@@ -82,7 +34,7 @@ of instead of relying on the recursion call stack.
 Consider the following search tree where alternatives to execute are represented as letters. 
 
 
-.. image:: _static/dfs.svg
+.. image:: ../_static/dfs.svg
     :scale: 50
     :width: 250
     :alt: DFS
@@ -147,7 +99,7 @@ to implement it.
 The idea of this solution is wrap the push/pop/alternative execution inside `Alternative` closure objects
 as illustrated on the next figure showing the stack after the root node expansion at line 3. 
 
-.. image:: _static/stackalternatives.svg
+.. image:: ../_static/stackalternatives.svg
     :scale: 50
     :width: 250
     :alt: DFS
@@ -305,7 +257,7 @@ Circuit Constraint
 The circuit constraint enforces an hamiltonian circuit on a successor array.
 On the next example the successor array is `[2,4,1,5,3,0]`
 
-.. image:: _static/circuit.svg
+.. image:: ../_static/circuit.svg
     :scale: 50
     :width: 250
     :alt: Circuit
@@ -334,7 +286,7 @@ Our instance variables used to keep track of the sub-chains are:
 
 Consider the following example with instantiated edges colored in grey.
 
-.. image:: _static/circuit-subtour.svg
+.. image:: ../_static/circuit-subtour.svg
     :scale: 50
     :width: 250
     :alt: Circuit
@@ -577,7 +529,7 @@ A variable in `y` should not be branched on before all the variables in `x` have
 Furthermore, we may want to apply a specific heuristic on `x` which is different from the heuristic we want to apply on `y` variables.
 
 
-.. image:: _static/combinator.svg
+.. image:: ../_static/combinator.svg
     :scale: 50
     :width: 200
     :alt: combinator
@@ -723,7 +675,7 @@ consumption profile. As it can be observed, the profile never exceeds
 the capacity 4.
 
 
-.. image:: _static/scheduling.svg
+.. image:: ../_static/scheduling.svg
     :scale: 50
     :width: 400
     :alt: scheduling cumulative
@@ -810,7 +762,7 @@ without being in conflict with the profile and the capacity.
 The earliest time  is 7.
 
 
-.. image:: _static/timetable2.svg
+.. image:: ../_static/timetable2.svg
     :scale: 50
     :width: 600
     :alt: scheduling timetable1
@@ -823,7 +775,7 @@ We provide a class `Profile.java <https://bitbucket.org/minicp/minicp/src/HEAD/s
 that is able to build efficiently a resource profile given an array of rectangles in input.
 A rectangle has three attributes: `start`, `end`, `height` as shown next:
 
-.. image:: _static/rectangle.svg
+.. image:: ../_static/rectangle.svg
     :scale: 50
     :width: 250
     :alt: rectangle
@@ -838,7 +790,7 @@ These two `dummy` rectangles are convenient because they guarantee
 the property that any time point falls on one rectangle of the profile.
 
 
-.. image:: _static/profile.svg
+.. image:: ../_static/profile.svg
     :scale: 50
     :width: 650
     :alt: profile
@@ -871,7 +823,7 @@ It is the rectangle starting at `start[i].getMax()` that ends in `start[i].getMi
 with a height equal to the demand of the activity.
 Be careful because not every activity has a mandatory part.
 
-.. image:: _static/timetable1.svg
+.. image:: ../_static/timetable1.svg
     :scale: 50
     :width: 600
     :alt: scheduling timetable1
@@ -983,7 +935,7 @@ A reminder about the watched literals technique:
 * If during the update a variable bound to `true` is detected, the constraint can be deactivated since it will always be satisfied.
 
 
-.. image:: _static/watched-literals.svg
+.. image:: ../_static/watched-literals.svg
     :scale: 50
     :width: 600
     :alt: watched literals
@@ -1040,7 +992,7 @@ More precisely you must:
 
 Régin's algorithm proceeds in four steps described in the following figure.
 
-.. image:: _static/alldifferent.png
+.. image:: ../_static/alldifferent.png
     :scale: 70
     :alt: profile
 
