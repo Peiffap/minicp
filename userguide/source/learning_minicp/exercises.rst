@@ -114,63 +114,6 @@ by skipping the push on a last branch at a given node.
 The sequence of operations becomes `push->push->A->push->D->pop->E->pop->push->B->pop->C->push->F->pop->G->pop`.
 
 
-
-Domain with an arbitrary set of values
-=================================================================================
-
-Implement the missing constructor in `IntVarImpl.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/core/IntVarImpl.java?at=master>`_
-
-
-.. code-block:: java
-
-    public IntVarImpl(Solver cp, Set<Integer> values) {
-        throw new NotImplementedException();
-    }
-
-
-This exercise is straightforward: just create a dense domain then remove the values not present in the set.
-
-Check that your implementation passes the tests `IntVarTest.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/test/java/minicp/engine/core/IntVarTest.java?at=master>`_
-
-
-Implement a domain iterator
-======================================
-
-Many filtering algorithms require to iterate over the values of a domain.
-The `fillArray` method from `ReversibleSparseSet.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/minicp/reversible/ReversibleSparseSet.java?at=master>`_
-allows to fill an array with all the values present in the sparse-set relying on the very efficient 'System.arraycopy'.
-
-.. code-block:: java
-
-    /**
-     * set the first values of <code>dest</code> to the ones
-     * present in the set
-     * @param dest, an array large enough dest.length >= getSize()
-     * @return the size of the set
-     */
-    public int fillArray(int [] dest) {
-        int s = size.getValue();
-        System.arraycopy(values, 0, dest, 0, s);
-        return s;
-    }
-    
-    
-The main advantage over the iterator mechanism is that not object is created (and thus garbage collected). 
-Indeed `dest` is typically a container array stored as an instance variable and reused many times.
-This is important for efficiency to avoid creating objects on the heap at each execution of a propagator.
-Never forget that a 'propagate()' method of 'Constraint' may be called thousands of times per second.
-This implementation using `fillArray` avoids the `ConcurrentModificationException` discussion 
-when implementing an Iterator: should we allow to modify a domain while iterating on it ?
-The answer here is very clear: you get a snapshot of the domain at the time of the call to `fillArray` and you can thus
-safely iterate over this `dest` array and modifying the domain at the same time.
-
-
-To do:
-
-* Implement `public int fillArray(int [] dest)` in `IntVarImpl.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/core/IntVarImpl.java?at=master>`_.
-* Check that your implementation passes the tests `IntVarTest.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/test/java/minicp/engine/core/IntVarTest.java?at=master>`_ add also add more tests.
-
-
 Implement a Custom Search
 =================================
 
@@ -585,32 +528,6 @@ The stable mariage problem
 Complete the partial model `StableMariage.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/examples/StableMariage.java?at=master>`_
 This model makes use of the `Element1DVar` constraint you have just implemented and is also a good example of manipulation of logical and reified constraints.
 Check that you discover the 6 solutions.
-
-The absolute value constraint
-==============================
-
-Implement `Absolute.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/Absolute.java?at=master>`_
-
-
-Again you will realize that several directions of implementation are possible
-
-1. The full domain consistent version
-2. An hybrid domain-bound consistent one
-
-
-Check that your implementation passes the tests `AbsoluteTest.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/test/java/minicp/engine/constraints/AbsoluteTest.java?at=master>`_
-
-
-The maximum constraint
-==============================
-
-Implement `Maximum.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/Maximum.java?at=master>`_
-
-
-Implement a bound-consistent filtering algorithm
-
-
-Check that your implementation passes the tests `MaximumTest.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/test/java/minicp/engine/constraints/MaximumTest.java?at=master>`_
 
 
 Compact table algorithm for table constraints with short tuples
