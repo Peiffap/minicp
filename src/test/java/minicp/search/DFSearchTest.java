@@ -179,7 +179,7 @@ public class DFSearchTest extends StateManagerTest {
 
 
     @Test
-    @Grade(value = 1, cpuTimeout = 1)
+    @Grade(value = 0.5, cpuTimeout = 1)
     public void testDeepDFS() {
         StateManager sm = stateFactory.get();
         StateInt i = sm.makeStateInt(0);
