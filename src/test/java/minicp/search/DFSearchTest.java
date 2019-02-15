@@ -15,6 +15,7 @@
 
 package minicp.search;
 
+import com.github.guillaumederval.javagrading.Grade;
 import minicp.state.StateInt;
 import minicp.state.StateManager;
 import minicp.state.StateManagerTest;
@@ -29,7 +30,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static minicp.cp.BranchingScheme.EMPTY;
 import static minicp.cp.BranchingScheme.branch;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 
 public class DFSearchTest extends StateManagerTest {
@@ -179,6 +179,7 @@ public class DFSearchTest extends StateManagerTest {
 
 
     @Test
+    @Grade(value = 1, cpuTimeout = 1)
     public void testDeepDFS() {
         StateManager sm = stateFactory.get();
         StateInt i = sm.makeStateInt(0);
