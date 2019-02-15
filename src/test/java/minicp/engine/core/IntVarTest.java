@@ -15,6 +15,7 @@
 
 package minicp.engine.core;
 
+import com.github.guillaumederval.javagrading.Grade;
 import minicp.engine.SolverTest;
 import minicp.util.NotImplementedExceptionAssume;
 import minicp.util.exception.InconsistencyException;
@@ -169,6 +170,7 @@ public class IntVarTest extends SolverTest {
 
 
     @Test
+    @Grade(value = 0.5, cpuTimeout = 2)
     public void arbitrarySetDomains() {
 
         try {
@@ -349,8 +351,8 @@ public class IntVarTest extends SolverTest {
 
 
     @Test
+    @Grade(value = 0.5, cpuTimeout = 1)
     public void fillArray() {
-
         try {
             Solver cp = solverFactory.get();
 

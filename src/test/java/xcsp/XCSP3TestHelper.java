@@ -15,18 +15,24 @@
 
 package xcsp;
 
+import com.github.guillaumederval.javagrading.Grade;
+import com.github.guillaumederval.javagrading.GradeClass;
 import minicp.util.exception.InconsistencyException;
 import minicp.util.exception.NotImplementedException;
 import org.junit.Assume;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FilePermission;
+import java.security.PermissionCollection;
+import java.security.Permissions;
 import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+@GradeClass(totalValue=10.0, defaultCpuTimeout = 20000)
 public abstract class XCSP3TestHelper {
     private String path;
 
@@ -35,6 +41,7 @@ public abstract class XCSP3TestHelper {
     }
 
     @Test
+    @Grade(customPermissions = XCSPPermissionCollectionFactory.class)
     public void testInstance() throws Exception {
         boolean shouldBeSat = !path.contains("unsat");
         try {
@@ -71,5 +78,17 @@ public abstract class XCSP3TestHelper {
             }
         }
         return out.toArray();
+    }
+
+    public static class XCSPPermissionCollectionFactory implements Grade.PermissionCollectionFactory {
+
+        public XCSPPermissionCollectionFactory() {}
+
+        @Override
+        public PermissionCollection get() {
+            PermissionCollection coll = new Permissions();
+            coll.add(new FilePermission(new File("data").getAbsolutePath()+"/-", "read"));
+            return coll;
+        }
     }
 }

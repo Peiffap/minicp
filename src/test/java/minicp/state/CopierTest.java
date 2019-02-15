@@ -15,10 +15,13 @@
 
 package minicp.state;
 
+import com.github.guillaumederval.javagrading.GradingRunner;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 
+@RunWith(GradingRunner.class)
 public class CopierTest {
 
 
