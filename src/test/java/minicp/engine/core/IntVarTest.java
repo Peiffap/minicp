@@ -170,7 +170,7 @@ public class IntVarTest extends SolverTest {
 
 
     @Test
-    @Grade(value = 1, cpuTimeout = 2)
+    @Grade(value = 0.5, cpuTimeout = 2)
     public void arbitrarySetDomains() {
 
         try {
@@ -351,7 +351,7 @@ public class IntVarTest extends SolverTest {
 
 
     @Test
-    @Grade(value = 1, cpuTimeout = 1)
+    @Grade(value = 0.5, cpuTimeout = 1)
     public void fillArray() {
         try {
             Solver cp = solverFactory.get();
