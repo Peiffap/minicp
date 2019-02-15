@@ -17,7 +17,6 @@ the solutions can contact us.*
 Slides
 ======
 
-INGI2365-2019 given by Pierre Schaus @UCLouvain:
 `Overview of CP, Filtering, Search, Consistency, Fix-point <https://www.icloud.com/keynote/0oS2SsSrew0r4aiPaPV470n4g#01-intro>`_
 
 Theoretical questions

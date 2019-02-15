@@ -11,6 +11,7 @@ This tutorial is based on the course "LINGI2365 Constraint Programming" given at
         :maxdepth: 2
 
         learning_minicp/part_1
+        learning_minicp/part_2
         learning_minicp/exercises
 
 Outcomes
