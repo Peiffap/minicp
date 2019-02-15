@@ -14,9 +14,7 @@ Slides
 Theoretical questions
 =====================
 
-* `Fix-point <https://inginious.org/course/minicp/consistencies>`_
-* `Consistency <https://inginious.org/course/minicp/consistencies>`_
-
+* `Domains and SparseSets <https://inginious.org/course/minicp/domains>`_
 
 
 
