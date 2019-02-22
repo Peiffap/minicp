@@ -38,8 +38,8 @@ Consider the following search tree where alternatives to execute are represented
     :alt: DFS
 
 
-A DFS exploration should executes the alternative in the following order `A->D->E->B->C->F->G`.
-On backtrack, the state should be restored and therefore these successive executions of the alternatives
+A DFS exploration should executes the branches in the following order `A->D->E->B->C->F->G`.
+On backtrack, the state should be restored and therefore these successive executions of the branches
 should be interleaved with 'push' and 'pop' operations on the trail.
 For instance a valid sequence for restoring the states on backtrack is the following:
 `push->A->push->D->pop->push->E->pop->pop->push->B->pop->push->C->push->F->pop->push->G->pop->pop`.
@@ -49,15 +49,15 @@ This is highlighted in the recursive dfs code given next.
 .. code-block:: java
    :emphasize-lines: 10, 13, 19
 
-        private void dfs(SearchStatistics statistics, SearchLimit limit) {
+        private void dfs(SearchStatistics statistics, Predicate<SearchStatistics> limit) {
             if (limit.stopSearch(statistics)) throw new StopSearchException();
-            Alternative [] alternatives = choice.call(); // generate the alternatives
+            Procedure[] branches = branching.get();
             if (alternatives.length == 0) {
                 statistics.nSolutions++;
                 notifySolutionFound();
             }
             else {
-                for (Alternative alt : alternatives) {
+                for (Procedure b : branches) {
                     state.push(); // pre-order
                     try {
                         statistics.nNodes++;
@@ -72,14 +72,14 @@ This is highlighted in the recursive dfs code given next.
             }
         }
 
-    A skeletton of solution is given next but you don't have to follow exactly this solution since there are many ways
+A skeletton of solution is given next but you don't have to follow exactly this solution since there are many ways
     to implement it.
 
 .. code-block:: java
    :emphasize-lines: 3
 
-        private void dfs(SearchStatistics statistics, SearchLimit limit) {
-            Stack<Alternative> alternatives = new Stack<Alternative>();
+        private void dfs(SearchStatistics statistics, Predicate<SearchStatistics> limit) {
+            Stack<Procedure> alternatives = new Stack<Procedure>();
             expandNode(alternatives,statistics); // root expension
             while (!alternatives.isEmpty()) {
                 if (limit.stopSearch(statistics)) throw new StopSearchException();
@@ -91,11 +91,12 @@ This is highlighted in the recursive dfs code given next.
                 }
             }
         }
-        private void expandNode(Stack<Alternative> alternatives, SearchStatistics statistics) {
+        private void expandNode(Stack<Procedure> alternatives, SearchStatistics statistics) {
            // TODO
         }
 
-    The idea of this solution is wrap the push/pop/alternative execution inside `Alternative` closure objects
+
+The idea of this solution is wrap the push/pop/alternative execution inside `Alternative` closure objects
 as illustrated on the next figure showing the stack after the root node expansion at line 3.
 
 .. image:: ../_static/stackalternatives.svg
@@ -136,9 +137,8 @@ to implement a custom search strategy. A skeleton for a custom search is the fol
 
 * As a variable heuristic, select the unbound variable `x[i]` (a facility `i` not yet assigned to a location) that has a maximum weight `w[i][j]` with another facility `j` (`x[j]` may be bound or not).
 * As a value heuristic, on the left branch, place this facility to on the location which is the closest possible to another location possible for facility `j`. On the right branch remove this value.
-* Hint: `selectMin` is a generic method parameterized by 'T'. To implement this heuristic, adding pairs `(i,j)` as a type for `T` is probably the easiest way to go.
+* Hint: `selectMin` is a generic method parameterized by 'T' and 'N' (the type on which the minimum is computed). To implement this heuristic, adding pairs `(i,j)` as a type for `T` is probably the easiest way to go.
 
 .. code-block:: java
 
-    public static <T> Choice selectMin(T[] x, Filter<T> p, ValueFun<T> f, BranchOn<T> body)
-
+    public static <T, N extends Comparable<N>> T selectMin(T[] x, Predicate<T> p, Function<T, N> f) {
