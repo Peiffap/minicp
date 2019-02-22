@@ -14,9 +14,7 @@ Slides
 Theoretical questions
 =====================
 
-* `TODO <https://inginious.org/course/minicp/domains>`_
-
-
+* `State managers <https://inginious.org/course/minicp/statemanager>`_
 
 DFS Explicit Stack
 ===================
@@ -145,3 +143,9 @@ to implement a custom search strategy. A skeleton for a custom search is the fol
 .. code-block:: java
 
     public static <T, N extends Comparable<N>> T selectMin(T[] x, Predicate<T> p, Function<T, N> f)
+
+Check on INGInious
+==================
+
+When you are done implementing your constraints and branching functions, do not forget to upload
+your code on INGInious to actually get your grade!
