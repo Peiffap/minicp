@@ -1,16 +1,26 @@
 package minicp.examples;
 
+import com.github.guillaumederval.javagrading.Grade;
 import com.github.guillaumederval.javagrading.GradeClass;
+import com.github.guillaumederval.javagrading.GradingRunner;
+import minicp.util.DataPermissionFactory;
 import minicp.util.io.InputReader;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import java.io.File;
+import java.io.FilePermission;
+import java.security.PermissionCollection;
+import java.security.Permissions;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
+@RunWith(GradingRunner.class)
 @GradeClass(totalValue = 1, defaultCpuTimeout = 5000)
-public class QAPCustomBranchingTest {
+public class QAPCustomBranchingTest  {
     @Test
+    @Grade(customPermissions = DataPermissionFactory.class)
     public void simpleTest() {
         InputReader reader = new InputReader("data/qap.txt");
 
@@ -30,7 +40,7 @@ public class QAPCustomBranchingTest {
             }
         }
 
-        List<Integer> solutions = QAP.solve(n, w, d, true, stats -> stats.numberOfNodes() > 19400);
+        List<Integer> solutions = QAP.solve(n, w, d, false, stats -> stats.numberOfNodes() > 19400);
         assertEquals((int)solutions.get(solutions.size()-1), 9552);
     }
 }
