@@ -12,6 +12,7 @@ This tutorial is based on the course "LINGI2365 Constraint Programming" given at
 
         learning_minicp/part_1
         learning_minicp/part_2
+        learning_minicp/part_3
         learning_minicp/exercises
 
 Outcomes
@@ -51,7 +52,8 @@ While, from a modeling perspective, the outcomes include:
 Technical Report
 ================
 
-The complete architecture of Mini-CP is described this `document <_static/Mini-CP.pdf>`_.
+The complete architecture of Mini-CP is described this `document <_static/mini-cp.pdf>`_.
+
 
 Other slides and teaching materials
 ===================================

@@ -51,29 +51,6 @@ public class Maximum extends AbstractConstraint {
 
     @Override
     public void propagate() {
-        int max = Integer.MIN_VALUE;
-        int min = Integer.MIN_VALUE;
-        int nSupport = 0;
-        int supportIdx = -1;
-        for (int i = 0; i < x.length; i++) {
-            x[i].removeAbove(y.max());
-
-            if (x[i].max() > max) {
-                max = x[i].max();
-            }
-            if (x[i].min() > min) {
-                min = x[i].min();
-            }
-
-            if (x[i].max() >= y.min()) {
-                nSupport += 1;
-                supportIdx = i;
-            }
-        }
-        if (nSupport == 1) {
-            x[supportIdx].removeBelow(y.min());
-        }
-        y.removeAbove(max);
-        y.removeBelow(min);
+        throw new NotImplementedException("Maximum");
     }
 }

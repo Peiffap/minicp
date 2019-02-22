@@ -9,7 +9,7 @@ the solutions can contact us.*
 Slides
 ======
 
-`Overview of CP, Filtering, Search, Consistency, Fix-point <https://www.icloud.com/keynote/0_FX71voo9CoHmC4f-u6nPuZw#02-domains-variables-constraints>`_
+`Domains and Variables <https://www.icloud.com/keynote/0_FX71voo9CoHmC4f-u6nPuZw#02-domains-variables-constraints>`_
 
 Theoretical questions
 =====================
