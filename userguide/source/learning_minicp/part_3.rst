@@ -25,7 +25,7 @@ DFS Explicit Stack
 The search algorithm of Mini-CP is *depth-first-search*.
 It is implemented using a recursive method in the class
 `DFSSearch.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/search/DFSearch.java?at=master>`_.
-To avoid any `stack-overflow` exception due to too a deep recursion in Java
+To avoid any `stack-overflow` exception due to a too deep recursion in Java
 we ask you to reimplement the depth-first-search with an explicit stack
 of instead of relying on the recursion call stack.
 
@@ -72,7 +72,7 @@ This is highlighted in the recursive dfs code given next.
             }
         }
 
-A skeletton of solution is given next but you don't have to follow exactly this solution since there are many ways
+A skeleton of solution is given next but you don't have to follow exactly this solution since there are many ways
     to implement it.
 
 .. code-block:: java
@@ -123,22 +123,25 @@ to implement a custom search strategy. A skeleton for a custom search is the fol
 
 .. code-block:: java
 
-        DFSearch dfs = makeDfs(cp,
-                selectMin(x,
-                        x -> x.getSize() > 1, // filter
-                        x -> x.getSize(), // variable selector
-                        xi -> {
-                            int v = xi.getMin(); // value selector (TODO)
-                            return branch(() -> equal(xi,v),
-                                    () -> notEqual(xi,v));
-                        }
-                ));
+        DFSearch dfs = makeDfs(cp, () -> {
+            IntVar sel = selectMin(x,
+                    vari -> vari.size() > 1, // filter
+                    vari -> vari.size()      // variable selector
+            );
+            if (sel == null)
+                return EMPTY;
+            int v = sel.min(); // value selector (TODO)
+            return branch(
+                () -> equal(sel,v),
+                () -> notEqual(sel,v)
+            );
+        });
 
 
 * As a variable heuristic, select the unbound variable `x[i]` (a facility `i` not yet assigned to a location) that has a maximum weight `w[i][j]` with another facility `j` (`x[j]` may be bound or not).
-* As a value heuristic, on the left branch, place this facility to on the location which is the closest possible to another location possible for facility `j`. On the right branch remove this value.
+* As a value heuristic, on the left branch, place this facility on the location :math:`k` which is the closest possible to another location possible for the facility `j` you selected earlier. On the right branch remove the value :math:`k`.
 * Hint: `selectMin` is a generic method parameterized by 'T' and 'N' (the type on which the minimum is computed). To implement this heuristic, adding pairs `(i,j)` as a type for `T` is probably the easiest way to go.
 
 .. code-block:: java
 
-    public static <T, N extends Comparable<N>> T selectMin(T[] x, Predicate<T> p, Function<T, N> f) {
+    public static <T, N extends Comparable<N>> T selectMin(T[] x, Predicate<T> p, Function<T, N> f)
