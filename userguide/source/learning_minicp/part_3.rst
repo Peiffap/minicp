@@ -58,7 +58,7 @@ This is highlighted in the recursive dfs code given next.
             }
             else {
                 for (Procedure b : branches) {
-                    state.push(); // pre-order
+                    state.saveState(); // pre-order
                     try {
                         statistics.nNodes++;
                         alt.call(); // call the alternative
@@ -67,7 +67,7 @@ This is highlighted in the recursive dfs code given next.
                         notifyFailure();
                         statistics.nFailures++;
                     }
-                    state.pop(); // post-order
+                    state.restoreState(); // post-order
                 }
             }
         }
