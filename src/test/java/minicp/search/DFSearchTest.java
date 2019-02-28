@@ -16,6 +16,7 @@
 package minicp.search;
 
 import com.github.guillaumederval.javagrading.Grade;
+import com.github.guillaumederval.javagrading.GradeClass;
 import minicp.state.StateInt;
 import minicp.state.StateManager;
 import minicp.state.StateManagerTest;
@@ -23,6 +24,7 @@ import minicp.util.NotImplementedExceptionAssume;
 import minicp.util.exception.InconsistencyException;
 import minicp.util.exception.NotImplementedException;
 import org.junit.Test;
+import xcsp.XCSP3TestHelper;
 
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -33,9 +35,6 @@ import static org.junit.Assert.assertEquals;
 
 
 public class DFSearchTest extends StateManagerTest {
-
-
-
     @Test
     public void testExample1() {
         StateManager sm = stateFactory.get();
@@ -179,8 +178,12 @@ public class DFSearchTest extends StateManagerTest {
 
 
     @Test
-    @Grade(value = 0.5, cpuTimeout = 1000)
+    @Grade(value = 0.5, cpuTimeout = 2000)
     public void testDeepDFS() {
+        testExample1();
+        testDFS();
+        testDFSSearchLimit();
+
         StateManager sm = stateFactory.get();
         StateInt i = sm.makeStateInt(0);
         boolean[] values = new boolean[10000];
@@ -208,8 +211,5 @@ public class DFSearchTest extends StateManagerTest {
         } catch (NotImplementedException e) {
             NotImplementedExceptionAssume.fail(e);
         }
-
     }
-
-
 }

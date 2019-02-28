@@ -131,7 +131,6 @@ public class MaximumTest extends SolverTest {
         }
     }
 
-
     @Test
     public void maximumTest4() {
         try {
@@ -140,7 +139,11 @@ public class MaximumTest extends SolverTest {
                 IntVar[] x = makeIntVarArray(cp, 4, 5);
                 IntVar y = makeIntVar(cp, -5, 20);
 
-                DFSearch dfs = makeDfs(cp, and(firstFail(x), firstFail(y)));
+                IntVar[] allIntVars = new IntVar[x.length+1];
+                System.arraycopy(x, 0, allIntVars, 0, x.length);
+                allIntVars[x.length] = y;
+
+                DFSearch dfs = makeDfs(cp, firstFail(allIntVars));
 
                 cp.post(new Maximum(x, y));
                 // 5*5*5*5 // 625
@@ -162,6 +165,4 @@ public class MaximumTest extends SolverTest {
             NotImplementedExceptionAssume.fail(e);
         }
     }
-
-
 }
