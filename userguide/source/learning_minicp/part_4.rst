@@ -15,7 +15,7 @@ Slides
 Theoretical questions
 =====================
 
-* `TODO <https://inginious.org/course/minicp/statemanager>`_
+* `Element Constraints <https://inginious.org/course/minicp/element>`_
 
 
 Element
