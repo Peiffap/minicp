@@ -1,5 +1,5 @@
 *****************************************************************
-Part 3: Sum and Element Constraints
+Part 4: Sum and Element Constraints
 *****************************************************************
 
 *We ask you not to publish your solutions on a public repository.
@@ -9,8 +9,8 @@ the solutions can contact us.*
 Slides
 ======
 
-`Sum Constraint <https://www.icloud.com/keynote/0wmHrabdvZYKaDOBYv-wK09Wg#03-state-management-search>`_
-`Element Constraint <https://www.icloud.com/keynote/0iQBg25tymcnxOtwCt8MVm76Q#04a-sum-constraint>`_
+* `Sum Constraint <https://www.icloud.com/keynote/0wmHrabdvZYKaDOBYv-wK09Wg#03-state-management-search>`_
+* `Element Constraint <https://www.icloud.com/keynote/0iQBg25tymcnxOtwCt8MVm76Q#04a-sum-constraint>`_
 
 Theoretical questions
 =====================
