@@ -9,8 +9,8 @@ the solutions can contact us.*
 Slides
 ======
 
-* `Circuit Constraint <https://www.icloud.com/keynote/0wmHrabdvZYKaDOBYv-wK09Wg#03-state-management-search>`_
-* `CP Branch and Bound Optimization and Large Neighborhood Search <https://www.icloud.com/keynote/0iQBg25tymcnxOtwCt8MVm76Q#04a-sum-constraint>`_
+* `Circuit Constraint <https://www.icloud.com/keynote/085FmanDku6kwb-W78j_KgidQ#05a-circuit>`_
+* `CP Branch and Bound Optimization and Large Neighborhood Search <https://www.icloud.com/keynote/0B3GvwWzrQQugkCyRkmlPlHIg#05b-optim-lns>`_
 
 Theoretical questions
 =====================
@@ -171,3 +171,17 @@ You can simply copy/paste/modify this implementation for the TSP.
 * Which parameter setting work best? How would you choose it?
 * Imagine a different relaxation specific for this problem. Try to relax with higher probability the decision variables that have the strongest impact on the objective (the relaxed variables should still be somehow randomized). You can for instance compute for each facility $i$: $sum_j d[x[i]][x[j]]*w[i][j]$ and base your decision to relax or not a facilities on those values.
 
+
+
+From TSP to VRP
+=================================================================
+
+Create a new file further `VRP.java` working with the exact same distance matrix as the TSP but assuming
+that there are now :math:`k` vehicles (make it a parameter and experiment with :math:`k=3` ).
+The depot is the city at index `0`, every other cities must be visited exactly once by any of the k vehicles.
+
+* variant1:  minimize the total distance travelled by the three vehicles
+* variant2 (more advanced): minimize the longest distance travelled by the three vehicles (in order to be fair among the vehicle drivers)
+
+
+You can also use LNS to speed-up the search.
