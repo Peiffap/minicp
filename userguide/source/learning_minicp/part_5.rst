@@ -59,7 +59,7 @@ Consider the following example with instantiated edges colored in grey.
     :width: 250
     :alt: Circuit
 
-        Before the addition of the green link we have
+Before the addition of the green link we have
 
 .. code-block:: java
 

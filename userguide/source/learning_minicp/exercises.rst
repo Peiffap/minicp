@@ -144,31 +144,6 @@ Make sure you pass all the tests `TableTest.java <https://bitbucket.org/minicp/m
 
 .. [CT2016] Demeulenaere, J., Hartert, R., Lecoutre, C., Perez, G., Perron, L., Régin, J. C., & Schaus, P. (2016, September). Compact-table: Efficiently filtering table constraints with reversible sparse bit-sets. In International Conference on Principles and Practice of Constraint Programming (pp. 207-223). Springer.
 
-Sequencer Combinator
-======================
-
-Sometimes we wish to branch on a given order on two families of variables, say `x[]` and then `y[]` as show on the next picture.
-A variable in `y` should not be branched on before all the variables in `x` have been decided.
-Furthermore, we may want to apply a specific heuristic on `x` which is different from the heuristic we want to apply on `y` variables.
-
-
-.. image:: ../_static/combinator.svg
-    :scale: 50
-    :width: 200
-    :alt: combinator
-
-This can be achieved as follows
-
-.. code-block:: java
-
-    IntVar [] x;
-    IntVar [] y;
-    makeDfs(and(firstFail(x),firstFail(y)))
-
-
-The `and` factory method creates a  `Sequencer.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/search/Sequencer.java?at=master>`_.
-You must complete its implementation.
-
 Eternity Problem
 ======================
 

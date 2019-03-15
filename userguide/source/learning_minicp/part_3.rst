@@ -111,7 +111,6 @@ Remark (optional): It is actually possible to reduce the number of operations on
 by skipping the push on a last branch at a given node.
 The sequence of operations becomes `push->push->A->push->D->pop->E->pop->push->B->pop->C->push->F->pop->G->pop`.
 
-
 Implement a Custom Search
 =================================
 
@@ -143,6 +142,31 @@ to implement a custom search strategy. A skeleton for a custom search is the fol
 .. code-block:: java
 
     public static <T, N extends Comparable<N>> T selectMin(T[] x, Predicate<T> p, Function<T, N> f)
+
+Sequencer Combinator
+======================
+
+Sometimes we wish to branch on a given order on two families of variables, say `x[]` and then `y[]` as show on the next picture.
+A variable in `y` should not be branched on before all the variables in `x` have been decided.
+Furthermore, we may want to apply a specific heuristic on `x` which is different from the heuristic we want to apply on `y` variables.
+
+
+.. image:: ../_static/combinator.svg
+:scale: 50
+    :width: 200
+        :alt: combinator
+
+    This can be achieved as follows
+
+.. code-block:: java
+
+    IntVar [] x;
+    IntVar [] y;
+    makeDfs(and(firstFail(x),firstFail(y)))
+
+
+The `and` factory method creates a  `Sequencer.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/search/Sequencer.java?at=master>`_.
+You must complete its implementation.
 
 Check on INGInious
 ==================

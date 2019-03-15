@@ -44,15 +44,15 @@ Régin's algorithm proceeds in four steps described in the following figure.
     :scale: 70
     :alt: profile
 
-    1. It computes an initial maximum matching in the variable value graph for the consistency test.
-    2. It build an oriented graph. Matched edges from right to left, un matched edge from left to right. There is also one dummy node
-       with in-comming edges from unmatched value nodes, and out-going edges toward matched value nodes.
-    3. It computes strongly connected components.
-    4. Any edge that is not in the initial maximum matching and connects two nodes from different components is removed.
+1. It computes an initial maximum matching in the variable value graph for the consistency test.
+2. It build an oriented graph. Matched edges from right to left, un matched edge from left to right. There is also one dummy node
+   with in-comming edges from unmatched value nodes, and out-going edges toward matched value nodes.
+3. It computes strongly connected components.
+4. Any edge that is not in the initial maximum matching and connects two nodes from different components is removed.
 
-    The two main algorithmic building blocks are provided.
+The two main algorithmic building blocks are provided.
 
-    * `MaximumMatching.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/MaximumMatching.java?at=master>`_
+* `MaximumMatching.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/MaximumMatching.java?at=master>`_
   is a class that computes a maximum matching given an array of variables. Instantiate this class once and for all in the constructor
   then you should simply call `compute` in the `propagate` method.
 * `GraphUtil.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/util/GraphUtil.java?at=master>`_
