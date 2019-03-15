@@ -1,5 +1,5 @@
 *****************************************************************
-Part 5: AllDifferent Constraint
+Part 6: AllDifferent Constraint
 *****************************************************************
 
 *We ask you not to publish your solutions on a public repository.
