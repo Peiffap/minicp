@@ -21,8 +21,8 @@ Theoretical questions
 Forward checking filtering
 =========================================
 
-Implement a dedicated propagator `AllDifferentFW.java`for the all-different that does the same-filtering
-as `AllDifferentACBinary.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/AllDifferentBinary.java?at=master>`_.
+Implement a dedicated propagator `AllDifferentFW.java` for the all-different that does the same-filtering
+as `AllDifferentACBinary.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/AllDifferentBinary.java?at=master>`_ .
 but avoid to iterate over bound-variables when removing a value.
 Implement the sparset-trick, similarly as the `Sum.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/Sum.java?at=master>`_ constraint.
 Experiment with the 15-Queens problem. How much speedup do you observe for searching all the solutions.
