@@ -32,7 +32,7 @@ More precisely, given an array `X` containing `n` variables, and an array `T` of
 
 That is, each line of the table is a valid assignment to `X`.
 
-Here is an example of a table, with five tuples and four variables:
+Here is an example of a table, with five tuples and four variables :
 
 +-------------+------+------+------+------+
 | Tuple index | X[0] | X[1] | X[2] | X[3] |
