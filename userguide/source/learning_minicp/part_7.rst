@@ -9,7 +9,7 @@ the solutions can contact us.*
 Slides
 ======
 
-* `Table Constraints <https://www.icloud.com/keynote/0dCFUILn1rSOatVpn4t0pVGxg#06-alldifferent>`_
+* `Table Constraints <https://www.icloud.com/keynote/0Nr2LcZGY2xQop312SgMGs37Q#07-table-constraints>`_
 
 Theoretical questions
 =====================
