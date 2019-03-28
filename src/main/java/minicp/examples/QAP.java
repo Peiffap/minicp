@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import static minicp.cp.BranchingScheme.firstFail;
+import static minicp.cp.BranchingScheme.limitedDiscrepancy;
 import static minicp.cp.Factory.*;
 
 /**
@@ -93,6 +94,11 @@ public class QAP {
         }
         IntVar totCost = sum(weightedDist);
         Objective obj = cp.minimize(totCost);
+
+        for (int dL = 0; dL < x.length; dL++) {
+            DFSearch dfs = makeDfs(cp, limitedDiscrepancy(firstFail(x),dL));
+            dfs.optimize(obj);
+        }
 
         DFSearch dfs = makeDfs(cp, firstFail(x));
 

@@ -359,36 +359,6 @@ that will gradually improve the performance for solving this problem optimally.
 
 
 
-Discrepancy Limited Search (optional)
-=================================================================
-
-Implement ``LimitedDiscrepancyBranching``, a branching that can wrap any branching
-to limit the discrepancy of the branching.
-
-Test your implementation in `LimitedDiscrepancyBranchingTest.java. <https://bitbucket.org/minicp/minicp/src/HEAD/src/test/java/minicp/search/LimitedDiscrepancyBranchingTest.java?at=master>`_
-
-
-Conflict based search strategy
-=================================================================
-
-
-Last Conflict [LC2009]_
-Conflict Ordering Search [COS2015]_
-
-
-.. [LC2009] Lecoutre, C., Saïs, L., Tabary, S., & Vidal, V. (2009). Reasoning from last conflict (s) in constraint programming. Artificial Intelligence, 173(18), 1592-1614.
-
-.. [COS2015] Gay, S., Hartert, R., Lecoutre, C., & Schaus, P. (2015). Conflict ordering search for scheduling problems. In International conference on principles and practice of constraint programming (pp. 140-148). Springer.
-
-
-Restarts (optional)
-========================
-
-TODO
-
-
-
-
 Compact table algorithm for negative table constraints
 ==================================================================
 
