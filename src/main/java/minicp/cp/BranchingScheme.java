@@ -170,9 +170,11 @@ public final class BranchingScheme {
      * Reasoning from last conflict (s) in constraint programming.
      * Artificial Intelligence, 173(18), 1592-1614.
      *
-     * @param branching a branching scheme (to be used as fallback)
+     * @param variableSelector returns the next variable to bind
+     * @param valueSelector given a variable, returns the value to which
+     *                      it must be assigned on the left branch (and excluded on the right)
      */
-    public static Supplier<Procedure[]> lastConflict(Supplier<Procedure[]> branching) {
+    public static Supplier<Procedure[]> lastConflict(Supplier<IntVar> variableSelector, Function<IntVar, Integer> valueSelector) {
         throw new NotImplementedException();
     }
 
@@ -184,9 +186,13 @@ public final class BranchingScheme {
      * In International conference on principles and practice of constraint programming (pp. 140-148).
      * Springer.
      *
-     * @param branching a branching scheme (to be used as fallback)
+     * @param variableSelector returns the next variable to bind
+     * @param valueSelector given a variable, returns the value to which
+     *                      it must be assigned on the left branch (and excluded on the right)
      */
-    public static Supplier<Procedure[]> conflictOrderingSearch(Supplier<Procedure[]> branching) {
+    public static Supplier<Procedure[]> conflictOrderingSearch(Supplier<IntVar> variableSelector, Function<IntVar, Integer> valueSelector) {
         throw new NotImplementedException();
     }
 }
+
+
