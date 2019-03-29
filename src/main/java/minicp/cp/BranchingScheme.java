@@ -20,6 +20,7 @@ import minicp.engine.core.Solver;
 import minicp.search.LimitedDiscrepancyBranching;
 import minicp.search.Sequencer;
 import minicp.util.Procedure;
+import minicp.util.exception.NotImplementedException;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -161,4 +162,31 @@ public final class BranchingScheme {
         return new LimitedDiscrepancyBranching(branching, maxDiscrepancy);
     }
 
+    /**
+     * Last conflict heuristic
+     * Attempts to branch first on the last variable that caused an Inconsistency
+     *
+     * Lecoutre, C., Saïs, L., Tabary, S., & Vidal, V. (2009).
+     * Reasoning from last conflict (s) in constraint programming.
+     * Artificial Intelligence, 173(18), 1592-1614.
+     *
+     * @param branching a branching scheme (to be used as fallback)
+     */
+    public static Supplier<Procedure[]> lastConflict(Supplier<Procedure[]> branching) {
+        throw new NotImplementedException();
+    }
+
+    /**
+     * Conflict Ordering Search
+     *
+     * Gay, S., Hartert, R., Lecoutre, C., & Schaus, P. (2015).
+     * Conflict ordering search for scheduling problems.
+     * In International conference on principles and practice of constraint programming (pp. 140-148).
+     * Springer.
+     *
+     * @param branching a branching scheme (to be used as fallback)
+     */
+    public static Supplier<Procedure[]> conflictOrderingSearch(Supplier<Procedure[]> branching) {
+        throw new NotImplementedException();
+    }
 }
