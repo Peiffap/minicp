@@ -47,6 +47,11 @@ Implement the bound impact value selector [BIVS2017]_  to discover good solution
 Test it on the TSP and compare it with random value selection.
 
 
+Implement the bound-impact value selector in `TSPBoundImpact.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/examplesTSPBoundImpact.java?at=master>`_
+Verify experimentally that the first solution found is smaller than with the default min value heuristic.
+You can also use it in combination with your conflict ordered search implementation.
+
+
 .. [BIVS2009] Fages, J. G., & Prud'Homme, C. Making the first solution good! In 2017 IEEE 29th International Conference on Tools with Artificial Intelligence (ICTAI). IEEE.
 
 
