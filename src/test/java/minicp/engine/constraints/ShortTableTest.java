@@ -94,6 +94,7 @@ public class ShortTableTest extends SolverTest {
     }
 
     @Test
+    @Grade(value = 1, cpuTimeout = 5000)
     public void randomTest() {
         Random rand = new Random(67292);
 
