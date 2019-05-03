@@ -15,6 +15,7 @@
 
 package minicp.engine.constraints;
 
+import com.github.guillaumederval.javagrading.Grade;
 import com.github.guillaumederval.javagrading.GradeClass;
 import minicp.engine.SolverTest;
 import minicp.engine.core.IntVar;
@@ -94,6 +95,7 @@ public class ShortTableTest extends SolverTest {
     }
 
     @Test
+    @Grade(value = 1, cpuTimeout = 5000)
     public void randomTest() {
         Random rand = new Random(67292);
 
