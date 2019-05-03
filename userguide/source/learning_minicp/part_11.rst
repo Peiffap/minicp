@@ -14,7 +14,7 @@ Slides
 Theoretical questions
 =====================
 
-* `Modeling <https://inginious.org/course/minicp/disjunctive>`_
+* `Modeling <https://inginious.org/course/minicp/modeling>`_
 
 
 
