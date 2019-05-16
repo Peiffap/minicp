@@ -33,7 +33,7 @@ import java.util.List;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-@GradeClass(totalValue=10.0, defaultCpuTimeout = 20000)
+//@GradeClass(totalValue=10.0, defaultCpuTimeout = 20000)
 public abstract class XCSP3TestHelper {
     private String path;
 
@@ -42,7 +42,7 @@ public abstract class XCSP3TestHelper {
     }
 
     @Test
-    @Grade(customPermissions = DataPermissionFactory.class)
+    //@Grade(customPermissions = DataPermissionFactory.class)
     public void testInstance() throws Exception {
         boolean shouldBeSat = !path.contains("unsat");
         try {
