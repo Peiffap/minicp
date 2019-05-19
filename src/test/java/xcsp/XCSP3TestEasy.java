@@ -20,7 +20,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-@Parameterized.UseParametersRunnerFactory(GradingRunnerWithParametersFactory.class)
+//@Parameterized.UseParametersRunnerFactory(GradingRunnerWithParametersFactory.class)
 public class XCSP3TestEasy extends XCSP3TestHelper {
     public XCSP3TestEasy(String path) { super(path); }
 

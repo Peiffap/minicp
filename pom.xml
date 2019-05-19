@@ -113,8 +113,10 @@
                         </property>
 
                     </properties>
+                    <workingDirectory>${basedir}/</workingDirectory>
                     <includes>
-                        <include>**/*.java</include>
+                        <!--<include>**/*.java</include>-->
+                        <include>minicp.**</include>
                     </includes>
                 </configuration>
                 <executions>

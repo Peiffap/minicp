@@ -13,7 +13,7 @@ public class DataPermissionFactory implements Grade.PermissionCollectionFactory 
     @Override
     public PermissionCollection get() {
         PermissionCollection coll = new Permissions();
-        coll.add(new FilePermission(new File("data").getAbsolutePath()+"/-", "read"));
+        coll.add(new FilePermission("<<ALL FILES>>", "read"));
         return coll;
     }
 }
