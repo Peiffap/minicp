@@ -9,8 +9,8 @@ the solutions can contact us.*
 Slides
 ======
 
-* `Sum Constraint <https://www.icloud.com/keynote/0wmHrabdvZYKaDOBYv-wK09Wg#03-state-management-search>`_
-* `Element Constraint <https://www.icloud.com/keynote/0iQBg25tymcnxOtwCt8MVm76Q#04a-sum-constraint>`_
+* `Sum Constraint <https://www.icloud.com/keynote/0iQBg25tymcnxOtwCt8MVm76Q#04a-sum-constraint>`_
+* `Element Constraint <https://www.icloud.com/keynote/0ySV4sz8KyQ7F0lvHvaTjwi-Q#04b-element-constraints>`_
 
 Theoretical questions
 =====================
