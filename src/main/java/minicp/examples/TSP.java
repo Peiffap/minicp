@@ -21,9 +21,11 @@ import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.Objective;
+import minicp.util.exception.InconsistencyException;
 import minicp.util.io.InputReader;
+import minicp.search.SearchStatistics;
 
-import static minicp.cp.BranchingScheme.firstFail;
+import static minicp.cp.BranchingScheme.*;
 import static minicp.cp.Factory.*;
 
 /**
@@ -31,6 +33,10 @@ import static minicp.cp.Factory.*;
  * <a href="https://en.wikipedia.org/wiki/Travelling_salesman_problem">Wikipedia</a>.
  */
 public class TSP {
+
+
+
+
     public static void main(String[] args) {
 
 
@@ -55,57 +61,29 @@ public class TSP {
 
         Objective obj = cp.minimize(totalDist);
 
-        //DFSearch dfs = makeDfs(cp, firstFail(succ));
 
-        DFSearch dfs = makeDfs(cp, firstFail(succ));
+        DFSearch dfs = makeDfs(cp, () -> {
+            IntVar xs = selectMin(succ,
+                    xi -> xi.size() > 1,
+                    xi -> xi.size());
+            if (xs == null)
+                return EMPTY;
+            else {
+                int v = xs.min();
+                return branch(() -> xs.getSolver().post(equal(xs, v)),
+                        () -> xs.getSolver().post(notEqual(xs, v)));
+            }
+        });
 
-        /*
         dfs.onSolution(() ->
                 System.out.println(totalDist)
         );
 
-        // take a while (optimum = 291)
-        SearchStatistics stats = dfs.solve();
-
+        SearchStatistics stats = dfs.optimize(obj,s -> s.numberOfSolutions() == 1);
         System.out.println(stats);
-        */
 
-        // --- Large Neighborhood Search ---
 
-        // Current best solution
-        int[] succBest = new int[n];
-        for (int i = 0; i < n; i++) {
-            succBest[i] = i;
-        }
 
-        dfs.onSolution(() -> {
-            // Update the current best solution
-            for (int i = 0; i < n; i++) {
-                succBest[i] = succ[i].min();
-            }
-            System.out.println("objective:" + totalDist.min());
-        });
 
-        dfs.optimize(obj);
-        /*
-        int nRestarts = 1000;
-        int failureLimit = 100;
-        Random rand = new java.util.Random(0);
-
-        for (int i = 0; i < nRestarts; i++) {
-            if (i%10==0)
-                System.out.println("restart number #"+i);
-            // Record the state such that the fragment constraints can be cancelled
-            dfs.optimizeSubjectTo(obj,statistics -> false, //statistics.nFailures >= failureLimit,
-                    () -> {
-                        // Assign the fragment 5% of the variables randomly chosen
-                        for (int j = 0; j < n; j++) {
-                            if (rand.nextInt(100) < 10) {
-                                equal(succ[j],succBest[j]);
-                            }
-                        }
-                    });
-        }
-        */
     }
 }

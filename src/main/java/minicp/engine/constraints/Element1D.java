@@ -20,7 +20,13 @@ import minicp.cp.Factory;
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.Constraint;
 import minicp.engine.core.IntVar;
+import minicp.state.StateInt;
+import minicp.state.StateManager;
+import minicp.util.exception.InconsistencyException;
 import minicp.util.exception.NotImplementedException;
+
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  *
@@ -30,8 +36,15 @@ import minicp.util.exception.NotImplementedException;
 public class Element1D extends AbstractConstraint {
 
     private final int[] t;
+
+
+    private final Integer[] sortedPerm;
+    private final StateInt low;
+    private final StateInt up;
+
     private final IntVar y;
     private final IntVar z;
+
 
     /**
      * Creates an element constraint {@code array[y] = z}
@@ -43,12 +56,28 @@ public class Element1D extends AbstractConstraint {
     public Element1D(int[] array, IntVar y, IntVar z) {
         super(y.getSolver());
         this.t = array;
+
+        sortedPerm = new Integer[t.length];
+        for (int i = 0; i < t.length; i++) {
+            sortedPerm[i] = i;
+        }
+        Arrays.sort(sortedPerm,Comparator.comparingInt(i -> t[i]));
+
+        StateManager sm = getSolver().getStateManager();
+        low = sm.makeStateInt(0);
+        up = sm.makeStateInt(t.length - 1);
+
         this.y = y;
         this.z = z;
     }
 
     @Override
     public void post() {
+         throw new NotImplementedException("Element1D");
+    }
+
+    @Override
+    public void propagate() {
          throw new NotImplementedException("Element1D");
     }
 }

@@ -27,6 +27,8 @@ import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Assume;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
 
 import static minicp.cp.BranchingScheme.firstFail;
@@ -147,6 +149,85 @@ public class ShortTableTest extends SolverTest {
             assertEquals(statsDecomp.numberOfSolutions(), statsAlgo.numberOfSolutions());
             assertEquals(statsDecomp.numberOfFailures(), statsAlgo.numberOfFailures());
             assertEquals(statsDecomp.numberOfNodes(), statsAlgo.numberOfNodes());
+        }
+    }
+
+    /**
+     * The table should accept all values of x0 and x1. However, it prunes off
+     * some values of x1.
+     */
+    @Test
+    public void minicpReplayShortTableCtIsStrongerThanAc() {
+
+        try {
+            final int star = 2147483647;
+
+            // This table should accept all values.
+            final int[][] table = {
+                    {2147483647, 2147483647}
+            };
+
+            Solver cp = solverFactory.get();
+
+            final IntVar x0 = makeIntVar(cp, new HashSet<>(Arrays.asList(0)));
+            final IntVar x1 = makeIntVar(cp, new HashSet<>(Arrays.asList(-1, 2)));
+
+
+            cp.post(new ShortTableCT(new IntVar[]{x0, x1}, table, star));
+
+            assertEquals(1, x0.size());
+            assertEquals(2, x1.size());
+
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
+        }
+    }
+
+    @Test(expected = InconsistencyException.class)
+    public void issue13() {
+
+        try {
+            final int star = -2147483648;
+
+            // This table should accept all values.
+            final int[][] table = {{0, 0}};
+
+            Solver cp = solverFactory.get();
+            final IntVar x0 = makeIntVar(cp, new HashSet<>(Arrays.asList(-5)));
+            final IntVar x1 = makeIntVar(cp, new HashSet<>(Arrays.asList(-5)));
+
+            cp.post(new ShortTableCT(new IntVar[]{x0, x1}, table, star));
+
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
+        }
+    }
+
+    @Test
+    public void issue14() {
+
+        try {
+
+            final int arity = 2;
+            final int star = 2147483647;
+            final int[][] table = {
+                    {2147483647, 2147483647} // means *, *
+            };
+
+            Solver cp = solverFactory.get();
+            IntVar x0 = makeIntVar(cp, new HashSet<>(Arrays.asList(0)));
+            IntVar x1 = makeIntVar(cp, new HashSet<>(Arrays.asList(-1, 2)));
+
+            IntVar y = makeIntVar(cp, new HashSet<>(Arrays.asList(0, 1)));
+            IntVar z = makeIntVar(cp, new HashSet<>(Arrays.asList(3)));
+
+            IntVar[] data = new IntVar[]{x0, x1};
+
+            cp.post(new ShortTableCT(data, table, star));
+            assertEquals(-1, data[1].min());
+
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
         }
     }
 }

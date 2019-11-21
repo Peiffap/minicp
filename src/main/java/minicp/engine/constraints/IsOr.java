@@ -20,6 +20,7 @@ import minicp.engine.core.BoolVar;
 import minicp.state.StateInt;
 import minicp.util.exception.NotImplementedException;
 
+
 /**
  * Reified logical or constraint
  */

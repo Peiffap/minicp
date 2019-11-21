@@ -51,6 +51,6 @@ public class Maximum extends AbstractConstraint {
 
     @Override
     public void propagate() {
-        throw new NotImplementedException("Maximum");
+         throw new NotImplementedException("Maximum");
     }
 }

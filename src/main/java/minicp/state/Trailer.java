@@ -90,7 +90,6 @@ public class Trailer implements StateManager {
     public void restoreState() {
         current.restore();
         current = prior.pop();
-        magic++;
         notifyRestore();
     }
 
@@ -103,30 +102,24 @@ public class Trailer implements StateManager {
     }
 
     @Override
-    public void restoreAllState() {
-        while (!prior.isEmpty())
-            restoreState();
-    }
-
-    @Override
     public void restoreStateUntil(int level) {
         while (getLevel() > level)
             restoreState();
     }
 
-
     @Override
-    public StateInt makeStateInt(int initValue) {
-        return new TrailInt(this, initValue);
+    public <T> State<T> makeStateRef(T initValue) {
+        return new Trail<>(this,initValue);
     }
 
     @Override
-    public StateBool makeStateBool(boolean initValue) {
-        return new TrailBool(this, initValue);
+    public StateInt makeStateInt(int initValue) {
+        return new TrailInt(this,initValue);
     }
 
     @Override
     public StateMap makeStateMap() {
         return new TrailMap(this);
     }
+
 }

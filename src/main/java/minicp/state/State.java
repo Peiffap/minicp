@@ -16,14 +16,29 @@
 package minicp.state;
 
 /**
- * Implementation of {@link StateInt} with copy strategy
- * @see Copier
- * @see StateManager#makeStateInt(int)
+ * Object that wraps a reference
+ * and can be saved and restored through
+ * the {@link StateManager#saveState()} / {@link StateManager#restoreState()}
+ * methods.
+ *
+ * @see StateManager#makeStateRef(Object)  for the creation.
  */
-public class CopyInt extends Copy<Integer> implements StateInt {
+public interface State<T> {
 
-    protected CopyInt(int initial) {
-        super(initial);
-    }
+    /**
+     * Set the value
+     * @param v the value to set
+     * @return the new value that was set
+     */
+    T setValue(T v);
 
+    /**
+     * Retrieves the value
+     * @return the value
+     */
+    T value();
+
+
+    @Override
+    String toString();
 }

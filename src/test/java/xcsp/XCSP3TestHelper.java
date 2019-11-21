@@ -48,17 +48,15 @@ public abstract class XCSP3TestHelper {
         try {
             System.out.println(path);
             XCSP xcsp3 = new XCSP(path);
-            String solution = xcsp3.solve(1,3);
+            String solution = xcsp3.solve(1, 5);
 
-            if(shouldBeSat) {
+            if (shouldBeSat) {
                 List<String> violatedCtrs = xcsp3.getViolatedCtrs(solution);
                 assertTrue(violatedCtrs.isEmpty());
-            }
-            else {
+            } else {
                 assertTrue(solution.equals(""));
             }
-        }
-        catch (IllegalArgumentException | NotImplementedException e) {
+        } catch (IllegalArgumentException | NotImplementedException e) {
             Assume.assumeNoException(e);
         } catch (InconsistencyException e) {
             assertFalse(shouldBeSat);

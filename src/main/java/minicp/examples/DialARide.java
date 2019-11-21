@@ -29,7 +29,7 @@ public class DialARide {
      * Returns the distance between two ride stops
      */
     public static int distance(RideStop a, RideStop b) {
-        return (int)(Math.sqrt((a.pos_x - b.pos_x) * (a.pos_x - b.pos_x) + (a.pos_y - b.pos_y) * (a.pos_y - b.pos_y)) * 100);
+        return (int) (Math.sqrt((a.pos_x - b.pos_x) * (a.pos_x - b.pos_x) + (a.pos_y - b.pos_y) * (a.pos_y - b.pos_y)) * 100);
     }
 
     /**
@@ -38,10 +38,10 @@ public class DialARide {
      * vehicleIdx is an integer beginning at 0 and ending at nVehicles - 1, rideIdx is the id of the ride you (partly)
      * fullfill with this stop (from 0 to pickupRideStops.size()-1) and isPickup a boolean indicate if you are beginning
      * or ending the ride. Do not add the last stop to the depot, it is implicit.
-     *
+     * <p>
      * You can check the validity of your solution with compute(), which returns the total distance, and raises an
      * exception if something is invalid.
-     *
+     * <p>
      * DO NOT MODIFY THIS CLASS.
      */
     public static class DialARideSolution {
@@ -58,14 +58,13 @@ public class DialARide {
             b.append("Length: ");
             b.append(compute());
             b.append("\n");
-            for(int i = 0; i < stops.length; i++) {
+            for (int i = 0; i < stops.length; i++) {
                 b.append("- ");
-                for(int s: stops[i]) {
-                    if(s >= pickupRideStops.size()) {
-                        b.append(s-pickupRideStops.size());
+                for (int s : stops[i]) {
+                    if (s >= pickupRideStops.size()) {
+                        b.append(s - pickupRideStops.size());
                         b.append("d, ");
-                    }
-                    else {
+                    } else {
                         b.append(s);
                         b.append("p, ");
                     }
@@ -78,7 +77,7 @@ public class DialARide {
         public DialARideSolution(int nVehicles, ArrayList<RideStop> pickupRideStops, ArrayList<RideStop> dropRideStops,
                                  RideStop depot, int vehicleCapacity, int maxRideTime, int maxRouteDuration) {
             stops = new ArrayList[nVehicles];
-            for(int i = 0; i < nVehicles; i++)
+            for (int i = 0; i < nVehicles; i++)
                 stops[i] = new ArrayList<>();
 
             this.pickupRideStops = pickupRideStops;
@@ -97,36 +96,35 @@ public class DialARide {
             int totalLength = 0;
             HashSet<Integer> seenRides = new HashSet<>();
 
-            for(int vehicleId = 0; vehicleId < stops.length; vehicleId ++) {
+            for (int vehicleId = 0; vehicleId < stops.length; vehicleId++) {
                 HashMap<Integer, Integer> inside = new HashMap<>();
                 RideStop current = depot;
                 int currentLength = 0;
-                for(int next: stops[vehicleId]) {
+                for (int next : stops[vehicleId]) {
                     RideStop nextStop;
-                    if(next < pickupRideStops.size())
+                    if (next < pickupRideStops.size())
                         nextStop = pickupRideStops.get(next);
                     else
                         nextStop = dropRideStops.get(next - pickupRideStops.size());
 
                     currentLength += distance(current, nextStop);
 
-                    if(next < pickupRideStops.size()) {
-                        if(seenRides.contains(next))
+                    if (next < pickupRideStops.size()) {
+                        if (seenRides.contains(next))
                             throw new RuntimeException("Ride stop visited twice");
                         seenRides.add(next);
                         inside.put(next, currentLength);
-                    }
-                    else {
-                        if(!inside.containsKey(next - pickupRideStops.size()))
+                    } else {
+                        if (!inside.containsKey(next - pickupRideStops.size()))
                             throw new RuntimeException("Drop before pickup");
-                        if(inside.get(next - pickupRideStops.size()) + maxRideTime < currentLength)
+                        if (inside.get(next - pickupRideStops.size()) + maxRideTime < currentLength)
                             throw new RuntimeException("Ride time too long");
                         inside.remove(next - pickupRideStops.size());
                     }
 
-                    if(currentLength > nextStop.window_end)
+                    if (currentLength > nextStop.window_end)
                         throw new RuntimeException("Ride stop visited too late");
-                    if(inside.size() > capacity)
+                    if (inside.size() > capacity)
                         throw new RuntimeException("Above maximum capacity");
 
                     current = nextStop;
@@ -134,15 +132,15 @@ public class DialARide {
 
                 currentLength += distance(current, depot);
 
-                if(inside.size() > 0)
+                if (inside.size() > 0)
                     throw new RuntimeException("Passenger never dropped");
-                if(currentLength > maxRouteDuration)
+                if (currentLength > maxRouteDuration)
                     throw new RuntimeException("Route too long");
 
                 totalLength += currentLength;
             }
 
-            if(seenRides.size() != pickupRideStops.size())
+            if (seenRides.size() != pickupRideStops.size())
                 throw new RuntimeException("Some rides never fulfilled");
 
             return totalLength;
@@ -180,9 +178,9 @@ public class DialARide {
 
         int nVehicles = reader.getInt();
         reader.getInt(); //ignore
-        int maxRouteDuration = reader.getInt()*100;
+        int maxRouteDuration = reader.getInt() * 100;
         int vehicleCapacity = reader.getInt();
-        int maxRideTime = reader.getInt()*100;
+        int maxRideTime = reader.getInt() * 100;
 
         RideStop depot = null;
         ArrayList<RideStop> pickupRideStops = new ArrayList<>();
@@ -190,17 +188,15 @@ public class DialARide {
         boolean lastWasNotDrop = true;
         while (true) {
             RideStop r = readRide(reader);
-            if(r == null)
+            if (r == null)
                 break;
-            if(r.type == 0) {
+            if (r.type == 0) {
                 assert depot == null;
                 depot = r;
-            }
-            else if(r.type == 1) {
+            } else if (r.type == 1) {
                 assert lastWasNotDrop;
                 pickupRideStops.add(r);
-            }
-            else { //r.type == -1
+            } else { //r.type == -1
                 lastWasNotDrop = false;
                 dropRideStops.add(r);
             }

@@ -77,7 +77,7 @@ public class CumulativeTest extends SolverTest {
             int[] r = new int[]{1, 1};
 
             cp.post(new Cumulative(s, d, r, 1));
-            equal(s[0], 0);
+            cp.post(equal(s[0], 0));
 
             assertEquals(5, s[1].min());
 
@@ -102,7 +102,7 @@ public class CumulativeTest extends SolverTest {
 
             cp.post(new Cumulative(s, d, r, 1));
 
-            equal(s[0], 5);
+            cp.post(equal(s[0], 5));
 
             assertEquals(0, s[1].max());
 
@@ -136,8 +136,8 @@ public class CumulativeTest extends SolverTest {
                     int start = s[i].min();
                     int end = start + d[i];
                     int height = r[i];
-                    return new Profile.Rectangle(start, end, height);
-                }).toArray(Profile.Rectangle[]::new);
+                    return new Rectangle(start, end, height);
+                }).toArray(Rectangle[]::new);
                 int[] discreteProfile = discreteProfile(rects);
                 for (int h : discreteProfile) {
                     assertTrue("capa exceeded in cumulative constraint", h <= 12);
@@ -194,7 +194,7 @@ public class CumulativeTest extends SolverTest {
         int max = Arrays.stream(rectangles).filter(r -> r.height() > 0).map(r -> r.end()).max(Integer::compare).get();
         int[] heights = new int[max - min];
         // discrete profileRectangles of rectangles
-        for (Profile.Rectangle r : rectangles) {
+        for (Rectangle r : rectangles) {
             if (r.height() > 0) {
                 for (int i = r.start(); i < r.end(); i++) {
                     heights[i - min] += r.height();

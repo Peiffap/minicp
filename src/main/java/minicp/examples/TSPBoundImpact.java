@@ -15,6 +15,7 @@
 
 package minicp.examples;
 
+import minicp.cp.Factory;
 import minicp.engine.constraints.Circuit;
 import minicp.engine.constraints.Element1D;
 import minicp.engine.core.IntVar;
@@ -43,8 +44,7 @@ public class TSPBoundImpact {
      * @return the value that if assigned to v induced the least augmentation of the objective obj
      */
     public static int boundImpactValueSelector(IntVar x, IntVar obj) {
-        // TODO
-        throw new NotImplementedException("BoundImpactValueSelector");
+         throw new NotImplementedException("boundImpactValueSelector");
     }
 
 
@@ -81,8 +81,8 @@ public class TSPBoundImpact {
             else {
                 //int v = boundImpactValueSelector(xs,totalDist);// now the first solution should have objective 2561
                 int v = xs.min(); // the first solution should have objective 4722
-                return branch(() -> equal(xs,v),
-                        () -> notEqual(xs, v));
+                return branch(() -> cp.post(equal(xs, v)),
+                        () -> cp.post(notEqual(xs, v)));
             }
         });
 
@@ -91,8 +91,6 @@ public class TSPBoundImpact {
         );
 
         SearchStatistics stats = dfs.optimize(obj);
-
-        makeDfs(cp,firstFail(succ));
 
         System.out.println(stats);
 

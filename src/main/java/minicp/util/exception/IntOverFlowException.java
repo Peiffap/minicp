@@ -13,17 +13,18 @@
  * Copyright (c)  2018. by Laurent Michel, Pierre Schaus, Pascal Van Hentenryck
  */
 
-package minicp.state;
+package minicp.util.exception;
 
-/**
- * Implementation of {@link StateInt} with copy strategy
- * @see Copier
- * @see StateManager#makeStateInt(int)
- */
-public class CopyInt extends Copy<Integer> implements StateInt {
 
-    protected CopyInt(int initial) {
-        super(initial);
+public class IntOverFlowException extends RuntimeException {
+
+    public IntOverFlowException(String message) {
+        super(message);
     }
+
+    public String toString() {
+        return "possible overflow on integer "+ super.toString();
+    }
+
 
 }

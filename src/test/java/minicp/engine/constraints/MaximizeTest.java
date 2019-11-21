@@ -42,13 +42,14 @@ public class MaximizeTest {
                 IntVar y = makeIntVar(cp, 10, 20);
 
                 IntVar[] x = new IntVar[]{y};
-                DFSearch dfs = makeDfs(cp, () -> y.isBound() ? EMPTY : branch(() -> equal(y, y.min()), () -> notEqual(y, y.min())));
-
+                DFSearch dfs = makeDfs(cp, () -> y.isBound() ? EMPTY :
+                        branch(() -> cp.post(equal(y, y.min())),
+                                () -> cp.post(notEqual(y, y.min()))));
                 Objective obj = cp.maximize(y);
 
                 SearchStatistics stats = dfs.solve();
 
-                assertEquals(11,stats.numberOfSolutions());
+                assertEquals(11, stats.numberOfSolutions());
 
 
             } catch (InconsistencyException e) {

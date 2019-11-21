@@ -16,9 +16,12 @@
 
 package minicp.engine.constraints;
 
+import minicp.cp.Factory;
 import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.Constraint;
 import minicp.engine.core.IntVar;
 import minicp.util.exception.NotImplementedException;
+
 
 /**
  *
@@ -47,6 +50,6 @@ public class Element1DDomainConsistent extends AbstractConstraint {
 
     @Override
     public void post() {
-        throw new NotImplementedException("Element1D");
+         throw new NotImplementedException("Element1D");
     }
 }

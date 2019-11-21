@@ -129,8 +129,8 @@ public final class BranchingScheme {
                 return EMPTY;
             else {
                 int v = xs.min();
-                return branch(() -> equal(xs, v),
-                        () -> notEqual(xs, v));
+                return branch(() -> xs.getSolver().post(equal(xs, v)),
+                        () -> xs.getSolver().post(notEqual(xs, v)));
             }
         };
     }
@@ -193,6 +193,5 @@ public final class BranchingScheme {
     public static Supplier<Procedure[]> conflictOrderingSearch(Supplier<IntVar> variableSelector, Function<IntVar, Integer> valueSelector) {
         throw new NotImplementedException();
     }
+
 }
-
-

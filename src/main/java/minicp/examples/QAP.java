@@ -70,11 +70,11 @@ public class QAP {
     }
 
     /**
-     * @param n size of the problem
-     * @param w weights
-     * @param d distances
+     * @param n       size of the problem
+     * @param w       weights
+     * @param d       distances
      * @param verbose indicates if the solver should indicates on stdout its progression
-     * @param limit allow to interrupt the solver faster if needed. See dfs.solve().
+     * @param limit   allow to interrupt the solver faster if needed. See dfs.solve().
      * @return list of solutions encountered
      */
     public static List<Integer> solve(int n, int[][] w, int[][] d, boolean verbose, Predicate<SearchStatistics> limit) {
@@ -96,7 +96,7 @@ public class QAP {
         Objective obj = cp.minimize(totCost);
 
         for (int dL = 0; dL < x.length; dL++) {
-            DFSearch dfs = makeDfs(cp, limitedDiscrepancy(firstFail(x),dL));
+            DFSearch dfs = makeDfs(cp, limitedDiscrepancy(firstFail(x), dL));
             dfs.optimize(obj);
         }
 
@@ -106,12 +106,12 @@ public class QAP {
         dfs.onSolution(() -> {
             solutions.add(totCost.min());
 
-            if(verbose)
+            if (verbose)
                 System.out.println("objective:" + totCost.min());
         });
 
         SearchStatistics stats = dfs.optimize(obj, limit);
-        if(verbose)
+        if (verbose)
             System.out.println(stats);
 
         return solutions;

@@ -18,7 +18,7 @@ package minicp.engine.constraints;
 import minicp.cp.Factory;
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.engine.core.IntVarImpl;
+import minicp.state.State;
 import minicp.state.StateInt;
 import minicp.util.exception.InconsistencyException;
 
@@ -29,10 +29,12 @@ import java.util.stream.IntStream;
  * Sum Constraint
  */
 public class Sum extends AbstractConstraint {
-    private int[] unBounds;
-    private StateInt nUnBounds;
-    private StateInt sumBounds;
+
+    private int[] free;
+    private StateInt nFrees;
+    private State<Long> sumFixed;
     private IntVar[] x;
+    private int[] min, max;
     private int n;
 
     /**
@@ -72,9 +74,11 @@ public class Sum extends AbstractConstraint {
         super(x[0].getSolver());
         this.x = x;
         this.n = x.length;
-        nUnBounds = getSolver().getStateManager().makeStateInt(n);
-        sumBounds = getSolver().getStateManager().makeStateInt(0);
-        unBounds = IntStream.range(0, n).toArray();
+        min = new int[x.length];
+        max = new int[x.length];
+        nFrees = getSolver().getStateManager().makeStateInt(n);
+        sumFixed = getSolver().getStateManager().makeStateRef(Long.valueOf(0));
+        free = IntStream.range(0, n).toArray();
     }
 
     @Override
@@ -87,26 +91,30 @@ public class Sum extends AbstractConstraint {
     @Override
     public void propagate() {
         // Filter the unbound vars and update the partial sum
-        int nU = nUnBounds.value();
-        int sumMin = sumBounds.value(), sumMax = sumBounds.value();
+        int nU = nFrees.value();
+        long sumMin = sumFixed.value(), sumMax = sumFixed.value();
         for (int i = nU - 1; i >= 0; i--) {
-            int idx = unBounds[i];
-            sumMin += x[idx].min(); // Update partial sum
-            sumMax += x[idx].max();
+            int idx = free[i];
+            min[idx] = x[idx].min();
+            max[idx] = x[idx].max();
+            sumMin += min[idx]; // Update partial sum
+            sumMax += max[idx];
             if (x[idx].isBound()) {
-                sumBounds.setValue(sumBounds.value() + x[idx].min());
-                unBounds[i] = unBounds[nU - 1]; // Swap the variables
-                unBounds[nU - 1] = idx;
+                sumFixed.setValue(sumFixed.value() + x[idx].min());
+                free[i] = free[nU - 1]; // Swap the variables
+                free[nU - 1] = idx;
                 nU--;
             }
         }
-        nUnBounds.setValue(nU);
-        if (sumMin > 0 || sumMax < 0)
+        nFrees.setValue(nU);
+        if (sumMin > 0 || sumMax < 0) {
             throw new InconsistencyException();
+        }
+
         for (int i = nU - 1; i >= 0; i--) {
-            int idx = unBounds[i];
-            x[idx].removeAbove(-(sumMin - x[idx].min()));
-            x[idx].removeBelow(-(sumMax - x[idx].max()));
+            int idx = free[i];
+            x[idx].removeAbove(-((int) (sumMin - min[idx])));
+            x[idx].removeBelow(-((int) (sumMax - max[idx])));
         }
     }
 }

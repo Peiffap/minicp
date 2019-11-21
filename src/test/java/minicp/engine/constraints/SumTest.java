@@ -15,23 +15,34 @@
 
 package minicp.engine.constraints;
 
+import minicp.cp.Factory;
 import minicp.engine.SolverTest;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
 import minicp.util.exception.InconsistencyException;
+import minicp.util.exception.IntOverFlowException;
 import minicp.util.exception.NotImplementedException;
 import minicp.util.NotImplementedExceptionAssume;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 import static minicp.cp.BranchingScheme.firstFail;
+import static minicp.cp.Factory.lessOrEqual;
 import static minicp.cp.Factory.makeDfs;
 import static minicp.cp.Factory.makeIntVar;
 import static org.junit.Assert.*;
 
 
 public class SumTest extends SolverTest {
+
+
+    private static IntVar makeIVar(Solver cp, Integer... values) {
+        return makeIntVar(cp, new HashSet<>(Arrays.asList(values)));
+    }
 
     @Test
     public void sum1() {
@@ -256,6 +267,74 @@ public class SumTest extends SolverTest {
             failed = true;
         }
         assertTrue(failed);
+    }
+
+
+    @Test
+    public void sum11() {
+
+        try {
+            Solver cp = solverFactory.get();
+
+            IntVar x = makeIVar(cp, -2147483645, -2147483639, -2147483637);
+            IntVar y = makeIVar(cp, -2147483645, -2147483638);
+
+            boolean failed = false;
+            try {
+                cp.post(Factory.sum(new IntVar[]{x}, y));
+            } catch (InconsistencyException e) {
+                failed = true;
+            }
+            assertFalse(failed);
+
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
+        }
+    }
+
+    @Test
+    public void sum12() {
+
+        try {
+
+            Solver cp = solverFactory.get();
+
+            IntVar x = makeIVar(cp, -45, -39, -37);
+            IntVar y = makeIVar(cp, -45, -3);
+
+            boolean failed = false;
+            try {
+                cp.post(Factory.sum(new IntVar[]{x}, y));
+            } catch (InconsistencyException e) {
+                failed = true;
+            }
+            assertFalse(failed);
+
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
+        }
+    }
+
+    @Test(expected = IntOverFlowException.class)
+    public void sum13OverFlow() {
+
+        try {
+
+            Solver cp = solverFactory.get();
+
+            IntVar x0 = makeIVar(cp, -463872433, -463872431, -463872430, -463872429);
+            IntVar x1 = makeIVar(cp, -463872438, -463872437, -463872430);
+            IntVar x2 = makeIVar(cp, -463872432, -463872429);
+            IntVar x3 = makeIVar(cp, -463872435, -463872434, -463872432, -463872431, -463872430, -463872429);
+            IntVar x4 = makeIVar(cp, -463872437, -463872436, -463872435, -463872432, -463872431, -463872430, -463872429);
+
+
+            cp.post(lessOrEqual(Factory.sum(x0, x1, x2, x3, x4), 0));
+
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
+        }
+
     }
 
 

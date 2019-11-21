@@ -23,6 +23,7 @@ import minicp.state.Copier;
 import minicp.state.Trailer;
 import minicp.util.exception.InconsistencyException;
 import minicp.util.Procedure;
+import minicp.util.exception.IntOverFlowException;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -297,41 +298,55 @@ public final class Factory {
     }
 
     /**
-     * Forces the variable to be equal to some given value and
-     * computes the fix point.
+     * Returns a constraint imposing that the variable is
+     * equal to some given value.
      *
      * @param x the variable to be assigned to v
      * @param v the value that must be assigned to x
+     * @return a constraint so that {@code x = v}
      */
-    public static void equal(IntVar x, int v) {
-        x.assign(v);
-        x.getSolver().fixPoint();
+    public static Constraint equal(IntVar x, int v) {
+        return new AbstractConstraint(x.getSolver()) {
+            @Override
+            public void post() {
+                x.assign(v);
+            }
+        };
     }
 
     /**
-     * Forces the variable to be less or equal to some given value and
-     * computes the fix point.
+     * Returns a constraint imposing that the variable less or
+     * equal to some given value.
      *
      * @param x the variable that is constrained bo be less or equal to v
      * @param v the value that must be the upper bound on x
+     * @return a constraint so that {@code x <= v}
      */
-    public static void lessOrEqual(IntVar x, int v) {
-        x.removeAbove(v);
-        x.getSolver().fixPoint();
+    public static Constraint lessOrEqual(IntVar x, int v) {
+        return new AbstractConstraint(x.getSolver()) {
+            @Override
+            public void post() {
+                x.removeAbove(v);
+            }
+        };
     }
 
     /**
-     * Forces the variable to be different to some given value and
-     * computes the fix point.
+     * Returns a constraint imposing that the variable is different
+     * from some given value.
      *
      * @param x the variable that is constrained bo be different from v
      * @param v the value that must be different from x
+     * @return a constraint so that {@code x != y}
      */
-    public static void notEqual(IntVar x, int v) {
-        x.remove(v);
-        x.getSolver().fixPoint();
+    public static Constraint notEqual(IntVar x, int v) {
+        return new AbstractConstraint(x.getSolver()) {
+            @Override
+            public void post() {
+                x.remove(v);
+            }
+        };
     }
-
 
     /**
      * Returns a constraint imposing that the two different variables
@@ -343,6 +358,19 @@ public final class Factory {
      */
     public static Constraint notEqual(IntVar x, IntVar y) {
         return new NotEqual(x, y);
+    }
+
+
+    /**
+     * Returns a constraint imposing that the two different variables
+     * must take the value.
+     *
+     * @param x a variable
+     * @param y a variable
+     * @return a constraint so that {@code x = y}
+     */
+    public static Constraint equal(IntVar x, IntVar y) {
+        return new Equal(x, y);
     }
 
     /**
@@ -522,14 +550,17 @@ public final class Factory {
      * @return a variable equal to {@code x[0]+x[1]+...+x[n-1]}
      */
     public static IntVar sum(IntVar... x) {
-        int sumMin = 0;
-        int sumMax = 0;
+        long sumMin = 0;
+        long sumMax = 0;
         for (int i = 0; i < x.length; i++) {
             sumMin += x[i].min();
             sumMax += x[i].max();
         }
+        if (sumMin < (long) Integer.MIN_VALUE || sumMax > (long) Integer.MAX_VALUE) {
+            throw new IntOverFlowException("domains are too large for sum constraint and would exceed Integer bounds");
+        }
         Solver cp = x[0].getSolver();
-        IntVar s = makeIntVar(cp, sumMin, sumMax);
+        IntVar s = makeIntVar(cp, (int) sumMin, (int) sumMax);
         cp.post(new Sum(x, s));
         return s;
     }
@@ -557,6 +588,19 @@ public final class Factory {
     }
 
     /**
+     * Returns a sum constraint.
+     * <p>
+     * Uses a _parameter pack_ to automatically bundle a list of IntVar as an array
+     *
+     * @param y the target value for the sum (a constant)
+     * @param x a parameter pack of IntVar representing an array of variables
+     * @return a constraint so that {@code y = x[0] + ... + x[n-1]}
+     */
+    public static Constraint sum(int y, IntVar... x) {
+        return new Sum(x, y);
+    }
+
+    /**
      * Returns a binary decomposition of the allDifferent constraint.
      *
      * @param x an array of variables
@@ -574,6 +618,6 @@ public final class Factory {
      * @return a constraint so that {@code x[i] != x[j] for all i < j}
      */
     public static Constraint allDifferentAC(IntVar[] x) {
-        return new AllDifferentAC(x);
+        return new AllDifferentDC(x);
     }
 }
