@@ -48,7 +48,30 @@ public class IsLessOrEqual extends AbstractConstraint { // b <=> x <= v
 
     @Override
     public void post() {
-        // TODO
-         throw new NotImplementedException("IsLessOrEqual");
+        propagate();
+        if (isActive()) {
+            x.propagateOnDomainChange(this);
+            b.propagateOnBind(this);
+        }
+    }
+
+    @Override
+    public void propagate() {
+        if (b.isTrue()) {
+            x.removeAbove(v); // x <= v hence all values above v can be removed from the domain.
+            setActive(false);
+        } else if (b.isFalse()) {
+            x.removeBelow(v + 1); // x !<= v -> x > v hence all values below below v + 1 can be removed.
+            setActive(false);
+        } else if (x.min() > v) { // if the smallest value is larger than v, then the constraint must be false.
+            b.assign(false);
+            setActive(false);
+        } else if (x.max() <= v) { // if the largest value is less than or equal to v, the constraint is always satisfied.
+            b.assign(true);
+            setActive(false);
+        } else if (x.isBound()) { // if x has a single value in its domain, one can find whether the constraint is satisfied.
+            b.assign(x.min() <= v);
+            setActive(false);
+        }
     }
 }
