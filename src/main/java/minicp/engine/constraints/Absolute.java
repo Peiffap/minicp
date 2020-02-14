@@ -47,14 +47,14 @@ public class Absolute extends AbstractConstraint {
 
     @Override
     public void propagate() {
-        int[] domValx = new int[x.size()];
+        int[] domValx = new int[x.size()]; //
         int[] domValy = new int[y.size()];
         if (y.isBound())
-            pruneAbsolute(y, x, domValx);
+            pruneAbsolute(y, x, domValx); // only retain y and -y
         else if (x.isBound())
-            y.assign(Math.abs(x.min()));
+            y.assign(Math.abs(x.min())); // only retain x
         else {
-            y.removeBelow(0);
+            y.removeBelow(0); // this can always be done; y is an absolute value
             pruneAbsolute(y, x, domValx);
             pruneEquals(x, y, domValy);
             x.whenDomainChange(() -> {
@@ -72,7 +72,7 @@ public class Absolute extends AbstractConstraint {
         // dump the domain of to into domVal
         to.fillArray(domVal);
         for (int k: domVal)
-            if (!from.contains(k) && !from.contains(-k))
+            if (!from.contains(k) && !from.contains(-k)) // check whether x contains either y or -y
                 to.remove(k);
     }
 
@@ -82,7 +82,7 @@ public class Absolute extends AbstractConstraint {
         // dump the domain of to into domVal
         to.fillArray(domVal);
         for (int k : domVal)
-            if (!from.contains(Math.abs(k))) {
+            if (!from.contains(Math.abs(k))) { // check if y contains absolute value of x
                 to.remove(k);
             }
     }

@@ -104,13 +104,13 @@ public class IntVarImpl implements IntVar {
         this.cp = cp;
         int min = Collections.min(values);
         int max = Collections.max(values);
-        domain = new SparseSetDomain(cp.getStateManager(), min, max);
+        domain = new SparseSetDomain(cp.getStateManager(), min, max); // add dense set
         onDomain = new StateStack<>(cp.getStateManager());
         onBind = new StateStack<>(cp.getStateManager());
         onBounds = new StateStack<>(cp.getStateManager());
         for (int i  = min; i <= max; i++)
             if (!values.contains(i))
-                domain.remove(i, domListener);
+                domain.remove(i, domListener); // domain \ values
     }
 
     @Override

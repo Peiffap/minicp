@@ -54,16 +54,17 @@ public class Maximum extends AbstractConstraint {
     @Override
     public void propagate() {
         for (IntVar xi : x)
-            xi.removeAbove(y.max());
+            xi.removeAbove(y.max()); // xi cannot be greater than max value of y
         int maxval = Integer.MIN_VALUE;
         int minval = Integer.MIN_VALUE;
         for (IntVar xi : x) {
-            maxval = Math.max(maxval, xi.max());
-            minval = Math.max(minval, xi.min());
+            maxval = Math.max(maxval, xi.max()); // maximum of maximums
+            minval = Math.max(minval, xi.min()); // maximum of minimums
         }
-        y.removeAbove(maxval);
-        y.removeBelow(minval);
+        y.removeAbove(maxval); // remove what is greater than max value in x
+        y.removeBelow(minval); // remove what is lower than the largest minimum
 
+        // if exactly one IntVar is left which intersects y (and can thus be the one used to get the max), both must be equal
         int cnt = 0;
         IntVar tmp = null;
         for (IntVar xi : x) {
@@ -75,6 +76,7 @@ public class Maximum extends AbstractConstraint {
             }
         }
 
+        // post equality constraint
         if (cnt == 1) {
             y.getSolver().post(new Equal(tmp, y));
             setActive(false);
