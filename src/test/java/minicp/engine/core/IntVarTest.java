@@ -367,6 +367,17 @@ public class IntVarTest extends SolverTest {
             Collections.addAll(expectedDom, -7, -4, -1, 2, 5);
             assertEquals(expectedDom, dom);
 
+            x = plus(mul(minus(makeIntVar(cp, 7)), 3), 18); // D(x)= {-7,-4,-1,2,5}
+            values = new int[10];
+            s = x.fillArray(values);
+            dom = new HashSet<Integer>();
+            for (int i = 0; i < s; i++) {
+                dom.add(values[i]);
+            }
+            expectedDom = new HashSet<Integer>();
+            Collections.addAll(expectedDom, 0, 3, 6, 9, 12, 15, 18);
+            assertEquals(expectedDom, dom);
+
         } catch (NotImplementedException e) {
             NotImplementedExceptionAssume.fail(e);
         }
