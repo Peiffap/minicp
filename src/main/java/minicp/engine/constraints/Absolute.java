@@ -30,7 +30,7 @@ public class Absolute extends AbstractConstraint {
     /**
      * Creates the absolute value constraint {@code y = |x|}.
      *
-     * @param x the input variable such that its absolut value is equal to y
+     * @param x the input variable such that its absolute value is equal to y
      * @param y the variable that represents the absolute value of x
      */
     public Absolute(IntVar x, IntVar y) {
@@ -40,15 +40,50 @@ public class Absolute extends AbstractConstraint {
     }
 
     public void post() {
-        // TODO
-         throw new NotImplementedException("Absolute");
+        propagate();
+        x.propagateOnDomainChange(this);
+        y.propagateOnDomainChange(this);
     }
 
     @Override
     public void propagate() {
-        // y = |x|
-        // TODO
-         throw new NotImplementedException("Absolute");
+        int[] domValx = new int[x.size()];
+        int[] domValy = new int[y.size()];
+        if (y.isBound())
+            pruneAbsolute(y, x, domValx);
+        else if (x.isBound())
+            y.assign(Math.abs(x.min()));
+        else {
+            y.removeBelow(0);
+            pruneAbsolute(y, x, domValx);
+            pruneEquals(x, y, domValy);
+            x.whenDomainChange(() -> {
+                pruneEquals(x, y, domValy);
+            });
+            y.whenDomainChange(() -> {
+                pruneAbsolute(y, x, domValx);
+            });
+        }
     }
 
+    // dom consistent filtering in the direction from -> to
+    // every value of to has a support in from
+    private void pruneEquals(IntVar from, IntVar to, int[] domVal) {
+        // dump the domain of to into domVal
+        to.fillArray(domVal);
+        for (int k: domVal)
+            if (!from.contains(k) && !from.contains(-k))
+                to.remove(k);
+    }
+
+    // dom consistent filtering in the direction from -> to
+    // every value of to has a support in from
+    private void pruneAbsolute(IntVar from, IntVar to, int[] domVal) {
+        // dump the domain of to into domVal
+        to.fillArray(domVal);
+        for (int k : domVal)
+            if (!from.contains(Math.abs(k))) {
+                to.remove(k);
+            }
+    }
 }
