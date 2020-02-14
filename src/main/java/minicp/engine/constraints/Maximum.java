@@ -44,13 +44,48 @@ public class Maximum extends AbstractConstraint {
 
     @Override
     public void post() {
-        // TODO
-         throw new NotImplementedException("Maximum");
+        propagate();
+        for (IntVar xi : x)
+            xi.propagateOnDomainChange(this);
+        y.propagateOnDomainChange(this);
     }
 
 
     @Override
     public void propagate() {
-         throw new NotImplementedException("Maximum");
+        for (IntVar xi : x)
+            xi.removeAbove(y.max());
+        int maxval = Integer.MIN_VALUE;
+        int minval = Integer.MIN_VALUE;
+        for (IntVar xi : x) {
+            maxval = Math.max(maxval, xi.max());
+            minval = Math.max(minval, xi.min());
+        }
+        y.removeAbove(maxval);
+        y.removeBelow(minval);
+
+        int cnt = 0;
+        IntVar tmp = null;
+        for (IntVar xi : x) {
+            if (intersects(xi, y)) {
+                cnt++;
+                tmp = xi;
+                if (cnt > 1)
+                    return;
+            }
+        }
+
+        if (cnt == 1) {
+            y.getSolver().post(new Equal(tmp, y));
+            setActive(false);
+        }
+    }
+
+    private boolean intersects(IntVar x, IntVar y) {
+        int xmin = x.min();
+        int ymin = y.min();
+        int xmax = x.max();
+        int ymax = y.max();
+        return (xmin >= ymin && xmin <= ymax) || (ymin >= xmin && ymin <= xmax);
     }
 }
