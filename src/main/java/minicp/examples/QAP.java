@@ -26,9 +26,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import static minicp.cp.BranchingScheme.firstFail;
-import static minicp.cp.BranchingScheme.limitedDiscrepancy;
+import static minicp.cp.BranchingScheme.*;
 import static minicp.cp.Factory.*;
+
+class Pair {
+    int i;
+    int j;
+    Pair(int i, int j) {
+        this.i = i;
+        this.j = j;
+    }
+    boolean sameij() {
+        return i == j;
+    }
+}
 
 /**
  * The Quadratic Assignment problem.
@@ -102,8 +113,40 @@ public class QAP {
             dfs.optimize(obj);
         }
         */
-
-        DFSearch dfs = makeDfs(cp, firstFail(x));
+        Pair[] p = new Pair[n*n];
+        int index = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                p[index++] = new Pair(i, j);
+            }
+        }
+        DFSearch dfs = makeDfs(cp, () -> {
+            Pair sel = selectMin(p,
+                    pair -> !x[pair.i].isBound(), // filter
+                    pair -> -w[pair.i][pair.j] // variable selector
+            );
+            if (sel == null)
+                return EMPTY;
+            int[] xivalues = new int[x[sel.i].size()];
+            x[sel.i].fillArray(xivalues);
+            int[] xjvalues = new int[x[sel.j].size()];
+            x[sel.j].fillArray(xjvalues);
+            Pair[] newP = new Pair[xivalues.length*xjvalues.length];
+            int ind = 0;
+            for (int i = 0; i < xivalues.length; i++) {
+                for (int j = 0; j < xjvalues.length; j++) {
+                    newP[ind++] = new Pair(xivalues[i], xjvalues[j]);
+                }
+            }
+            Pair val = selectMin(newP,
+                    pair -> !pair.sameij(),
+                    pair -> d[pair.i][pair.j]
+            );
+            return branch(
+                    () -> equal(x[sel.i], val.i),
+                    () -> notEqual(x[sel.i], val.i)
+            );
+        });
 
         ArrayList<Integer> solutions = new ArrayList<>();
         dfs.onSolution(() -> {
