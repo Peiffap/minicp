@@ -213,7 +213,7 @@ public class DFSearch {
     }
 
 
-    private void dfs(SearchStatistics statistics, Predicate<SearchStatistics> limit) {
+    private void recursive_dfs(SearchStatistics statistics, Predicate<SearchStatistics> limit) {
         if (limit.test(statistics))
             throw new StopSearchException();
         Procedure[] branches = branching.get();
@@ -233,6 +233,55 @@ public class DFSearch {
                     }
                 });
             }
+        }
+    }
+
+    private void dfs(SearchStatistics statistics, Predicate<SearchStatistics> limit) {
+        Stack<Procedure> alternatives = new Stack<Procedure>();
+        expandNode(alternatives, statistics); // root expansion
+        while (!alternatives.isEmpty()) {
+            if (limit.test(statistics)) throw new StopSearchException();
+            try {
+                alternatives.pop().call();
+            } catch (InconsistencyException e) {
+                notifyFailure();
+                statistics.incrFailures();
+            }
+        }
+    }
+    private void expandNode(Stack<Procedure> alternatives, SearchStatistics statistics) {
+        Procedure[] branches = branching.get();
+
+        // if there are no branches from the current node, signal solution has been found
+        if (branches.length == 0) {
+            alternatives.push(() -> {
+                statistics.incrSolutions();
+                notifySolution();
+            });
+        }
+
+        // push right to left on the stack so that left is first (since stack is lifo)
+        for (int i =  branches.length - 1; i >= 0; i--) {
+            Procedure alt = branches[i];
+
+            // pop first (since stack is lifo)
+            alternatives.push(() -> {
+                sm.restoreState();
+            });
+
+            // then call and expansion (since stack is lifo)
+            alternatives.push(() -> {
+                statistics.incrNodes();
+                alt.call();
+
+                // this not does get called if InconsistencyException
+                expandNode(alternatives, statistics);
+            });
+
+            // finally, push (since stack is lifo)
+            alternatives.push(() -> {
+                sm.saveState();
+            });
         }
     }
 
