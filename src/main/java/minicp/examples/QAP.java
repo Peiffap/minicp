@@ -106,45 +106,41 @@ public class QAP {
         IntVar totCost = sum(weightedDist);
         Objective obj = cp.minimize(totCost);
 
-        /*
-        // TODO: discrepancy search (to be implemented as an exercise)
-        for (int dL = 0; dL < x.length; dL++) {
-            DFSearch dfs = makeDfs(cp, limitedDiscrepancy(firstFail(x), dL));
-            dfs.optimize(obj);
-        }
-        */
-        Pair[] p = new Pair[n*n];
+        Pair[] p = new Pair[n * n];
         int index = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                p[index++] = new Pair(i, j);
+                p[index++] = new Pair(i, j); // add all possible pairs of facilities
             }
         }
         DFSearch dfs = makeDfs(cp, () -> {
             Pair sel = selectMin(p,
-                    pair -> !x[pair.i].isBound(), // filter
-                    pair -> -w[pair.i][pair.j] // variable selector
+                    pair -> !x[pair.i].isBound(), // filter (only take if the facility's location is not bound yet)
+                    pair -> -w[pair.i][pair.j] // selector (minus sign because we want the maximum of the weight)
             );
             if (sel == null)
                 return EMPTY;
+
+            // get values of the chosen pair
             int[] xivalues = new int[x[sel.i].size()];
             x[sel.i].fillArray(xivalues);
             int[] xjvalues = new int[x[sel.j].size()];
             x[sel.j].fillArray(xjvalues);
-            Pair[] newP = new Pair[xivalues.length*xjvalues.length];
+
+            Pair[] newP = new Pair[xivalues.length * xjvalues.length]; // all possible pairs
             int ind = 0;
             for (int i = 0; i < xivalues.length; i++) {
                 for (int j = 0; j < xjvalues.length; j++) {
-                    newP[ind++] = new Pair(xivalues[i], xjvalues[j]);
+                    newP[ind++] = new Pair(xivalues[i], xjvalues[j]); // add all possible pairs of locations
                 }
             }
             Pair val = selectMin(newP,
-                    pair -> !pair.sameij(),
-                    pair -> d[pair.i][pair.j]
+                    pair -> !pair.sameij(), // filter (location must be unique)
+                    pair -> d[pair.i][pair.j] // selector (minimize distance between locations)
             );
             return branch(
-                    () -> equal(x[sel.i], val.i),
-                    () -> notEqual(x[sel.i], val.i)
+                    () -> equal(x[sel.i], val.i), // left branch: equals
+                    () -> notEqual(x[sel.i], val.i) // right branch: not equals
             );
         });
 
