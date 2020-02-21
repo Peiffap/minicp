@@ -274,7 +274,7 @@ public class DFSearch {
                 statistics.incrNodes();
                 alt.call();
 
-                // this not does get called if InconsistencyException
+                // this not does get called if an InconsistencyException is thrown
                 expandNode(alternatives, statistics);
             });
 
