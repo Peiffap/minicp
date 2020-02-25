@@ -31,8 +31,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static minicp.cp.BranchingScheme.EMPTY;
 import static minicp.cp.BranchingScheme.branch;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 
+@GradeClass(totalValue=1, allCorrect=true)
 public class DFSearchTest extends StateManagerTest {
     @Test
     public void testExample1() {
@@ -214,11 +216,9 @@ public class DFSearchTest extends StateManagerTest {
 
     @Test
     @Grade(value = 0.5, cpuTimeout = 2000)
-    public void makeItFail() {
+    public void checkInconsistenciesManagedCorrectly() {
         StateManager sm = stateFactory.get();
-        StateInt i = sm.makeStateInt(0);
-        int[] values = new int[3];
-        values[0] = 0;
+        int[] values = new int[3]; //init to 0
 
         DFSearch dfs = new DFSearch(sm, () -> {
             if(values[0] >= 100)
@@ -237,7 +237,6 @@ public class DFSearchTest extends StateManagerTest {
                     });
         });
 
-
-        SearchStatistics stats = dfs.solve();
+        dfs.solve();
     }
 }
