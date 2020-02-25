@@ -211,4 +211,33 @@ public class DFSearchTest extends StateManagerTest {
             NotImplementedExceptionAssume.fail(e);
         }
     }
+
+    @Test
+    @Grade(value = 0.5, cpuTimeout = 2000)
+    public void makeItFail() {
+        StateManager sm = stateFactory.get();
+        StateInt i = sm.makeStateInt(0);
+        int[] values = new int[3];
+        values[0] = 0;
+
+        DFSearch dfs = new DFSearch(sm, () -> {
+            if(values[0] >= 100)
+                return EMPTY;
+
+            return branch(
+                    () -> {
+                        values[0] += 1;
+                        if(values[0] == 1)
+                            throw new InconsistencyException();
+                        //this should never happen in a left branch!
+                        assertNotEquals(2, values[0]);
+                    },
+                    () -> {
+                        values[0] += 1;
+                    });
+        });
+
+
+        SearchStatistics stats = dfs.solve();
+    }
 }
