@@ -65,6 +65,7 @@ public class Element1DDomainConsistent extends AbstractConstraint {
 
     @Override
     public void propagate() {
+        // remove from y all the values for which t[i] is not in z
         for (int i = 0; i < t.length; i++) {
             if (!z.contains(t[i])) {
                 y.remove(i);
@@ -78,6 +79,7 @@ public class Element1DDomainConsistent extends AbstractConstraint {
         int[] Dy = new int[y.size()];
         y.fillArray(Dy);
 
+        // compute zSupp
         for (int ind = 0; ind < Dz.length; ind++) {
             int v = Dz[ind];
             for (int i : Dy) {
@@ -86,6 +88,8 @@ public class Element1DDomainConsistent extends AbstractConstraint {
                 }
             }
         }
+
+        // remove from z all values for which support is 0
         for (int i = 0; i < zSupp.length; i++) {
             if (zSupp[i] == 0) {
                 z.remove(Dz[i]);
