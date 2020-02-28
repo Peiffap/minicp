@@ -356,7 +356,12 @@ public class IntVarTest extends SolverTest {
         try {
             Solver cp = solverFactory.get();
 
-            IntVar x = plus(mul(minus(makeIntVar(cp, 5)), 3), 5); // D(x)= {-7,-4,-1,2,5}
+            IntVar x = makeIntVar(cp, 2, 9);
+            x.remove(3);
+            x.remove(5);
+            x.remove(2);
+            x.remove(9);
+
             int[] values = new int[10];
             int s = x.fillArray(values);
             HashSet<Integer> dom = new HashSet<Integer>();
@@ -364,7 +369,7 @@ public class IntVarTest extends SolverTest {
                 dom.add(values[i]);
             }
             HashSet<Integer> expectedDom = new HashSet<Integer>();
-            Collections.addAll(expectedDom, -7, -4, -1, 2, 5);
+            Collections.addAll(expectedDom, 4, 6, 7, 8);
             assertEquals(expectedDom, dom);
 
             x = plus(mul(minus(makeIntVar(cp, 7)), 3), 18); // D(x)= {-7,-4,-1,2,5}

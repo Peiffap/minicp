@@ -28,7 +28,7 @@ Theoretical questions
 Forking Mini-CP to do the programming exercices
 ===============================================
 
-`Follow this tutorial <https://inginious.org/course/minicp/minicp-install>`_ then clone your repository.
+`Follow this tutorial <https://inginious.org/course/minicp/minicp-install-1>`_ then clone your repository.
 
 :ref:`Then, follow this tutorial to import it in your IDE <install>`.
 
