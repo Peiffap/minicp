@@ -20,7 +20,14 @@ import minicp.cp.Factory;
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.Constraint;
 import minicp.engine.core.IntVar;
+import minicp.engine.core.IntVarImpl;
+import minicp.state.StateInt;
+import minicp.state.StateManager;
 import minicp.util.exception.NotImplementedException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.stream.IntStream;
 
 
 /**
@@ -31,8 +38,7 @@ import minicp.util.exception.NotImplementedException;
 public class Element1DDomainConsistent extends AbstractConstraint {
 
     private final int[] t;
-    private final IntVar y;
-    private final IntVar z;
+    private final IntVar y, z;
 
     /**
      * Creates an element constraint {@code array[y] = z}
@@ -50,6 +56,39 @@ public class Element1DDomainConsistent extends AbstractConstraint {
 
     @Override
     public void post() {
-         throw new NotImplementedException("Element1D");
+        y.removeBelow(0);
+        y.removeAbove(t.length - 1);
+        y.propagateOnDomainChange(this);
+        z.propagateOnDomainChange(this);
+        propagate();
+    }
+
+    @Override
+    public void propagate() {
+        int[] Dz = new int[z.size()];
+        z.fillArray(Dz);
+
+        for (int i = 0; i < t.length; i++) {
+            if (!z.contains(t[i])) {
+                y.remove(i);
+            }
+        }
+
+        int[] zSupp = new int[z.size()];
+        for (int ind = 0; ind < Dz.length; ind++) {
+            int v = Dz[ind];
+            int[] Dy = new int[y.size()];
+            y.fillArray(Dy);
+            for (int i : Dy) {
+                if (t[i] == v) {
+                    zSupp[ind]++;
+                }
+            }
+        }
+        for (int i = 0; i < zSupp.length; i++) {
+            if (zSupp[i] == 0) {
+                z.remove(i);
+            }
+        }
     }
 }

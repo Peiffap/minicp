@@ -103,4 +103,31 @@ public class Element1DDCTest extends SolverTest {
             NotImplementedExceptionAssume.fail(e);
         }
     }
+
+    @Test
+    public void element1Dslides4b() {
+        try {
+            Solver cp = solverFactory.get();
+
+            Random rand = new Random(678);
+            IntVar y = makeIntVar(cp, 0, 5);
+            IntVar z = makeIntVar(cp, 3, 5);
+
+            int[] T = new int[]{3, 4, 5, 5, 4, 3};
+
+            cp.post(new Element1DDomainConsistent(T, y, z));
+
+            assertTrue(y.max() < 6);
+
+            cp.post(notEqual(z, 4));
+
+            assertEquals(z.size(), 2);
+            assertEquals(y.size(), 4);
+
+
+
+        } catch (NotImplementedException e) {
+            NotImplementedExceptionAssume.fail(e);
+        }
+    }
 }

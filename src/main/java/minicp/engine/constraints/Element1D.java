@@ -25,8 +25,11 @@ import minicp.state.StateManager;
 import minicp.util.exception.InconsistencyException;
 import minicp.util.exception.NotImplementedException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.stream.IntStream;
 
 /**
  *
@@ -36,14 +39,27 @@ import java.util.Comparator;
 public class Element1D extends AbstractConstraint {
 
     private final int[] t;
+    private final IntVar y, z;
 
-
-    private final Integer[] sortedPerm;
+    private final StateInt[] nColSup;
     private final StateInt low;
     private final StateInt up;
 
-    private final IntVar y;
-    private final IntVar z;
+    private final ArrayList<Pair> yz;
+
+    private static final class Pair implements Comparable<Pair> {
+        private final int y, z;
+
+        private Pair(int y, int z) {
+            this.y = y;
+            this.z = z;
+        }
+
+        @Override
+        public int compareTo(Pair p) {
+            return z - p.z;
+        }
+    }
 
 
     /**
@@ -57,11 +73,10 @@ public class Element1D extends AbstractConstraint {
         super(y.getSolver());
         this.t = array;
 
-        sortedPerm = new Integer[t.length];
-        for (int i = 0; i < t.length; i++) {
-            sortedPerm[i] = i;
-        }
-        Arrays.sort(sortedPerm,Comparator.comparingInt(i -> t[i]));
+        this.yz = new ArrayList<Pair>();
+        for (int i = 0; i < t.length; i++)
+            yz.add(new Pair(i, t[i]));
+        Collections.sort(yz);
 
         StateManager sm = getSolver().getStateManager();
         low = sm.makeStateInt(0);
@@ -69,15 +84,40 @@ public class Element1D extends AbstractConstraint {
 
         this.y = y;
         this.z = z;
+
+        nColSup = IntStream.range(0, t.length).mapToObj(i -> sm.makeStateInt(1)).toArray(StateInt[]::new); // init value = 1 because this denotes whether the pair is still available
     }
 
     @Override
     public void post() {
-         throw new NotImplementedException("Element1D");
+        y.removeBelow(0);
+        y.removeAbove(t.length - 1);
+        y.propagateOnDomainChange(this);
+        z.propagateOnBoundChange(this);
+        propagate();
+    }
+
+    private void updateSupport(int lostPos) {
+        if (nColSup[yz.get(lostPos).y].decrement() == 0)
+            y.remove(yz.get(lostPos).y);
     }
 
     @Override
     public void propagate() {
-         throw new NotImplementedException("Element1D");
+        int l = low.value(), u = up.value();
+        int zMin = z.min(), zMax = z.max();
+
+        while (yz.get(l).z < zMin || !y.contains(yz.get(l).y)) {
+            updateSupport(l++);
+            if (l > u) throw new InconsistencyException();
+        }
+        while (yz.get(u).z > zMax || !y.contains(yz.get(u).y)) {
+            updateSupport(u--);
+            if (l > u) throw new InconsistencyException();
+        }
+        z.removeBelow(yz.get(l).z);
+        z.removeAbove(yz.get(u).z);
+        low.setValue(l);
+        up.setValue(u);
     }
 }
