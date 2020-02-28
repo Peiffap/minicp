@@ -121,10 +121,18 @@ public class Element1DDCTest extends SolverTest {
 
             cp.post(notEqual(z, 4));
 
-            assertEquals(z.size(), 2);
-            assertEquals(y.size(), 4);
+            assertEquals(2, z.size());
+            assertEquals(4, y.size());
 
+            cp.post(notEqual(y, 0));
 
+            assertEquals(2, z.size());
+            assertEquals(3, y.size());
+
+            cp.post(notEqual(y, 5));
+
+            assertEquals(1, z.size());
+            assertEquals(2, y.size());
 
         } catch (NotImplementedException e) {
             NotImplementedExceptionAssume.fail(e);
