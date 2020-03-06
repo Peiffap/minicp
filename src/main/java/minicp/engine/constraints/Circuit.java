@@ -57,15 +57,52 @@ public class Circuit extends AbstractConstraint {
 
     @Override
     public void post() {
+        // Post allDifferent constraint.
         getSolver().post(allDifferent(x));
-        // TODO
-        // Hint: use x[i].whenBind(...) to call the bind
-         throw new NotImplementedException("Circuit");
+
+        for (int i = 0; i < x.length; ++i) {
+            int k = i;
+            x[i].whenBind(() -> this.bind(k));
+
+            if (x[i].isBound())
+                bind(i);
+
+            // Remove values outside the bounds.
+            x[i].removeBelow(0);
+            x[i].removeAbove(x.length - 1);
+
+            // Remove sub-tours.
+            if (x.length > 1)
+                x[i].remove(i);
+        }
     }
 
 
     private void bind(int i) {
-        // TODO
-         throw new NotImplementedException("Circuit");
+        // Get the successor, destination and origin of the bound variable.
+        int succ = x[i].min();
+        int d = dest[succ].value();
+        int origin = orig[i].value();
+
+        // Destination of origin becomes destination of successor.
+        dest[origin].setValue(d);
+
+        // Origin of destination becomes origin of bound variable.
+        orig[d].setValue(origin);
+
+        // Total length from origin to new destination.
+        // Computed as
+        // current length from origin to i
+        //  + length from succ to its destination
+        //  + the length from i to succ (which is always one).
+        lengthToDest[origin].setValue(lengthToDest[origin].value() + lengthToDest[succ].value() + 1);
+
+        int len = lengthToDest[origin].value();
+
+        // If the path is not yet a circuit,
+        // we remove the origin as potential destination to avoid sub-tours.
+        if (len < x.length - 1) {
+            x[d].remove(origin);
+        }
     }
 }
