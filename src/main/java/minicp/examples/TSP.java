@@ -25,6 +25,8 @@ import minicp.util.exception.InconsistencyException;
 import minicp.util.io.InputReader;
 import minicp.search.SearchStatistics;
 
+import java.util.Arrays;
+
 import static minicp.cp.BranchingScheme.*;
 import static minicp.cp.Factory.*;
 
@@ -61,15 +63,50 @@ public class TSP {
 
         Objective obj = cp.minimize(totalDist);
 
+        // Variable selection: min-regret.
+        // Choose the variable xi which has the largest difference between the closest two successor cities:
+        // s1(xi) = min(distanceMatrix[xi][.])
+        // s2(xi) = min(distanceMatrix[xi][.] \ {distanceMatrix[xi][indexOf(s1)]})
+        // xi : max(s2(xi) - s1(xi))
 
         DFSearch dfs = makeDfs(cp, () -> {
             IntVar xs = selectMin(succ,
                     xi -> xi.size() > 1,
-                    xi -> xi.size());
+                    xi -> {
+                        int[] xidom = new int[xi.size()];
+                        xi.fillArray(xidom);
+                        int i = Arrays.asList(succ).indexOf(xi);
+                        int s1val = Integer.MAX_VALUE;
+                        int s2val = Integer.MAX_VALUE;
+                        for (int ind = 0; ind < xidom.length; ind++) {
+                            int j = xidom[ind];
+                            int d = distanceMatrix[i][j];
+                            if (d < s1val) {
+                                s2val = s1val;
+                                s1val = d;
+                            } else if (d < s2val) {
+                                s2val = d;
+                            }
+                        }
+                        return s1val - s2val;
+                    });
+
+            // Value selection: select successor with minimal distance.
             if (xs == null)
                 return EMPTY;
             else {
-                int v = xs.min();
+                int j = Arrays.asList(succ).indexOf(xs);
+                int[] xsdom = new int[xs.size()];
+                xs.fillArray(xsdom);
+                int minDist = Integer.MAX_VALUE;
+                int index = -1;
+                for (int i = 0; i < xsdom.length; i++) {
+                    if (distanceMatrix[xsdom[i]][j] < minDist) {
+                        minDist = distanceMatrix[xsdom[i]][j];
+                        index = xsdom[i];
+                    }
+                }
+                int v = index;
                 return branch(() -> xs.getSolver().post(equal(xs, v)),
                         () -> xs.getSolver().post(notEqual(xs, v)));
             }
@@ -79,10 +116,11 @@ public class TSP {
                 System.out.println(totalDist)
         );
 
-        SearchStatistics stats = dfs.optimize(obj,s -> s.numberOfSolutions() == 1);
+        SearchStatistics stats = dfs.optimize(obj);
         System.out.println(stats);
 
-
+        // Solution is slow since the bounding struggles to identify shitty branches quickly
+        // (due to the selection being intelligent).
 
 
     }

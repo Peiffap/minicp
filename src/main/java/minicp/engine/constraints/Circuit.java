@@ -77,7 +77,6 @@ public class Circuit extends AbstractConstraint {
         }
     }
 
-
     private void bind(int i) {
         // Get the successor, destination and origin of the bound variable.
         int succ = x[i].min();
