@@ -19,12 +19,14 @@ import minicp.engine.constraints.Element1D;
 import minicp.engine.constraints.Element1DVar;
 import minicp.engine.core.BoolVar;
 import minicp.engine.core.IntVar;
+import minicp.engine.core.IntVarImpl;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
 import minicp.util.io.InputReader;
 
 import java.util.Arrays;
+import java.util.HashSet;
 
 import static minicp.cp.BranchingScheme.and;
 import static minicp.cp.BranchingScheme.firstFail;
@@ -89,21 +91,19 @@ public class StableMariage {
 
         for (int m = 0; m < n; m++) {
             // the husband of the wife of man m is m
-            // TODO: model this with Element1DVar
-            
+            cp.post(new Element1DVar(husband, wife[m], new IntVarImpl(cp, m, m)));
 
-            // TODO: model this with Element1D: rankWomen[m][wife[m]] == wifeFref[m]
-            
-
+            // rankWomen[m][wife[m]] == wifePref[m]
+            cp.post(new Element1D(rankWomen[m], wife[m], wifePref[m]));
         }
 
         for (int w = 0; w < n; w++) {
             // the wife of the husband of woman i is i
-            // TODO: model this with Element1DVar
+            cp.post(new Element1DVar(wife, husband[w], new IntVarImpl(cp, w, w)));
             
 
-            // TODO: model this with Element1D: rankMen[w][husband[w]] == husbandPref[w]
-            
+            // rankMen[w][husband[w]] == husbandPref[w]
+            cp.post(new Element1D(rankMen[w], husband[w], husbandPref[w]));
         }
 
         for (int m = 0; m < n; m++) {
@@ -117,9 +117,10 @@ public class StableMariage {
 
                 // if w prefers m than her husband, the opposite is not true i.e. m prefers his own woman than w
                 // (husbandPref[w] > rankMen[w][m]) => (wifePref[m] < rankWomen[m][w])
-                // TODO: model this constraint
-                
 
+                BoolVar wPrefersM = isLarger(husbandPref[w], rankMen[w][m]);
+                BoolVar mDont = isLess(wifePref[m], rankWomen[m][w]);
+                cp.post(implies(wPrefersM, mDont));
             }
         }
 
