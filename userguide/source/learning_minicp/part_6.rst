@@ -22,7 +22,7 @@ Forward checking filtering
 =========================================
 
 Implement a dedicated propagator `AllDifferentFW.java` for the all-different that does the same-filtering
-as `AllDifferentACBinary.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/AllDifferentBinary.java?at=master>`_ .
+as `AllDifferentBinary.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/AllDifferentBinary.java?at=master>`_ .
 but avoid to iterate over bound-variables when removing a value.
 Implement the sparset-trick, similarly as the `Sum.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/Sum.java?at=master>`_ constraint.
 Experiment with the 15-Queens problem. How much speedup do you observe for searching all the solutions.
@@ -34,8 +34,8 @@ The objective here is to implement the filtering algorithm described in  [REGIN9
 to remove every impossible value for the `AllDifferent` constraint (Arc-Consistency).
 More precisely you must:
 
-* Implement the constraint `AllDifferentAC.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/AllDifferentAC.java?at=master>`_.
-* Test your implementation in `AllDifferentACTest.java. <https://bitbucket.org/minicp/minicp/src/HEAD/src/test/java/minicp/engine/constraints/AllDifferentACTest.java?at=master>`_
+* Implement the constraint `AllDifferentDC.java <https://bitbucket.org/minicp/minicp/src/HEAD/src/main/java/minicp/engine/constraints/AllDifferentDC.java?at=master>`_.
+* Test your implementation in `AllDifferentDCTest.java. <https://bitbucket.org/minicp/minicp/src/HEAD/src/test/java/minicp/engine/constraints/AllDifferentDCTest.java?at=master>`_
 
 
 Régin's algorithm proceeds in four steps described in the following figure.
