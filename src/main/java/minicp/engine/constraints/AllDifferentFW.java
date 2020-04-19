@@ -2,13 +2,10 @@ package minicp.engine.constraints;
 
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
-import minicp.engine.core.Solver;
 import minicp.state.StateInt;
 
 import java.util.ArrayList;
 import java.util.stream.IntStream;
-
-import static minicp.cp.Factory.makeIntVar;
 
 public class AllDifferentFW extends AbstractConstraint {
 

@@ -15,8 +15,7 @@
 
 package minicp.util;
 
-import java.util.Arrays;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
@@ -49,6 +48,92 @@ public class GraphUtil {
          * @return the identifiers of the nodes originating from the specified node
          */
         Iterable<Integer> out(int id);
+    }
+
+    public static class DirectedGraph implements Graph {
+
+        private ArrayList<Set<Integer>> in;
+        private ArrayList<Set<Integer>> out;
+        private int n;
+
+        public DirectedGraph(int n) {
+            this.n = n;
+            in = new ArrayList<>();
+            out = new ArrayList<>();
+            for (int i = 0; i < n; ++i) {
+                in.add(new HashSet<>());
+                out.add(new HashSet<>());
+            }
+        }
+
+        public void clear() {
+            for (int i = 0; i < n; ++i) {
+                in.get(i).clear();
+                out.get(i).clear();
+            }
+        }
+
+        // Add an edge from i to j
+        public void link(int i, int j) {
+            out.get(i).add(j);
+            in.get(j).add(i);
+        }
+
+        // Remove an edge from i to j
+        public void unlink(int i, int j) {
+            out.get(i).remove(j);
+            in.get(j).remove(i);
+        }
+
+        /**
+         * @return the number of nodes in this graph. They are indexed from 0 to n-1.
+         */
+        @Override
+        public int n() {
+            return n;
+        }
+
+        /**
+         * @param idx the node to consider
+         * @return the nodes ids that have an edge going from then to node idx
+         */
+        @Override
+        public Iterable<Integer> in(int idx) {
+            return in.get(idx);
+        }
+
+        /**
+         * @param idx the node to consider
+         * @return the nodes ids that have an edge going from node idx to them.
+         */
+        @Override
+        public Iterable<Integer> out(int idx) {
+            return out.get(idx);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+
+            for (int i = 0; i < n; ++i) {
+                builder.append("x[").append(i).append("];").append("\n");
+
+                builder.append("in: ");
+
+                for (int in: in(i)) {
+                    builder.append(in).append(" ");
+                }
+                builder.append("\n");
+
+                builder.append("out: ");
+                for (int out: out(i)) {
+                    builder.append(out).append(" ");
+                }
+                builder.append("\n");
+            }
+
+            return builder.toString();
+        }
     }
 
     /**
