@@ -22,6 +22,8 @@ import minicp.util.GraphUtil.*;
 
 import java.util.ArrayList;
 
+import static minicp.util.exception.InconsistencyException.INCONSISTENCY;
+
 /**
  * Arc Consistent AllDifferent Constraint
  *
@@ -147,6 +149,10 @@ public class AllDifferentDC extends AbstractConstraint {
         //       use updateGraph() to update the residual graph
         //       use  GraphUtil.stronglyConnectedComponents to compute SCC's
         int sizeMatching = maximumMatching.compute(match);
+
+        if (sizeMatching < x.length) {
+            throw INCONSISTENCY;
+        }
 
         updateGraph();
 
