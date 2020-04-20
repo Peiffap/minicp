@@ -62,7 +62,7 @@ public class TableCT extends AbstractConstraint {
         super(x[0].getSolver());
         this.x = new IntVar[x.length];
         this.table = table;
-        dom = new int[Arrays.stream(x).map(var -> var.size()).max(Integer::compare).get()];
+        dom = new int[Arrays.stream(x).map(IntVar::size).max(Integer::compare).get()];
 
         // Allocate supportedByVarVal
         supports = new BitSet[x.length][];
@@ -97,30 +97,32 @@ public class TableCT extends AbstractConstraint {
 
     @Override
     public void propagate() {
-
-
         // Bit-set of tuple indices all set to 1
         supportedTuples.set(0, table.length);
 
-        // TODO 1: compute supportedTuples as
+        // compute supportedTuples as
         // supportedTuples = (supports[0][x[0].min()] | ... | supports[0][x[0].max()] ) & ... &
         //                   (supports[x.length][x[0].min()] | ... | supports[x.length][x[0].max()] )
         //
 
-         // This should be displayed instead of the actual code
+        for (int i = 0; i < supports.length; i++) {
+            tmpSupport.clear();
+            for (int j = 0; j < supports[i].length; j++) {
+                if (x[i].contains(j))
+                    tmpSupport.or(supports[i][j]);
+            }
+            supportedTuples.and(tmpSupport);
+        }
 
-        // TODO 2
         for (int i = 0; i < x.length; i++) {
             int nVal = x[i].fillArray(dom);
             for (int v = 0; v < nVal; v++) {
-                    // TODO 2 the condition for removing the setValue dom[v] from x[i] is to check if
-                    // there is no intersection between supportedTuples and the support[i][dom[v]]
-                     throw new NotImplementedException();
-
+                // the condition for removing the setValue dom[v] from x[i] is to check if
+                // there is no intersection between supportedTuples and the support[i][dom[v]]
+                if (!supportedTuples.intersects(supports[i][dom[v]])) {
+                    x[i].remove(dom[v]);
+                }
             }
         }
-
-
-        //throw new NotImplementedException("TableCT");
     }
 }

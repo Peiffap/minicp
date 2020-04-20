@@ -16,8 +16,7 @@
 package minicp.examples;
 
 import minicp.cp.Factory;
-import minicp.engine.constraints.TableCT;
-import minicp.engine.constraints.TableDecomp;
+import minicp.engine.constraints.*;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
@@ -41,6 +40,19 @@ public class Eternity {
 
     public static IntVar[] flatten(IntVar[][] x) {
         return Arrays.stream(x).flatMap(Arrays::stream).toArray(IntVar[]::new);
+    }
+
+    public static int[][] generatePermutations(int[][] pieces, int i) {
+        int[][] possibilities = new int[4][4];
+
+        for (int j = 0; j < 4; ++j) {
+            possibilities[j] = new int[4];
+            for (int k = 0; k < pieces[k].length; ++k) {
+                possibilities[j][k] = pieces[i][(j + k) % 4];
+            }
+        }
+
+        return possibilities;
     }
 
     public static void main(String[] args) {
@@ -67,7 +79,7 @@ public class Eternity {
 
         // ------------------------
 
-        // TODO: create the table where each line correspond to one possible rotation of a piece
+        // create the table where each line correspond to one possible rotation of a piece
         // For instance if the line piece[6] = [2,3,5,1]
         // the four lines created in the table are
         // [6,2,3,5,1] // rotation of 0°
@@ -77,8 +89,19 @@ public class Eternity {
 
         // Table with makeIntVarArray pieces and for each their 4 possible rotations
 
-        int[][] table = new int[4 * n * m][5];
-        
+        int [][] table = new int[4 * n * m][5];
+
+        for (int j = 0; j < n * m; ++j) {
+            int[][] permutations = generatePermutations(pieces, j);
+            int start = j * 4;
+            int end = ((j + 1) * 4) - 1;
+            for (int i = start; i <= end; ++i) {
+                table[i][0] = j;
+                for (int k = 0; k < 4; ++k) {
+                    table[i][k + 1] = permutations[i % 4][k];
+                }
+            }
+        }
 
         Solver cp = makeSolver();
 
@@ -120,22 +143,41 @@ public class Eternity {
 
         // The constraints of the problem
 
-        // TODO: State the constraints of the problem
-
         // Constraint1: all the pieces placed are different
+
+        cp.post(new AllDifferentFW(flatten(id)));
+        // For some reason, AllDifferentFW >> AllDifferentDC
 
         // Constraint2: all the pieces placed are valid ones i.e. one of the given mxn pieces possibly rotated
 
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < m; ++j) {
+                IntVar[] tuple = {id[i][j], u[i][j], r[i][j], d[i][j], l[i][j]};
+                cp.post(new TableCT(tuple, table));
+            }
+        }
+
         // Constraint3: place "0" one all external side of the border (gray color)
 
-        
+        for (int i = 0; i < m; ++i) {
+            u[0][i].assign(0);
+            d[n - 1][i].assign(0);
+        }
 
+        for (int i = 0; i < n; ++i) {
+            l[i][0].assign(0);
+            r[i][m - 1].assign(0);
+        }
 
         // The search using the and combinator
 
         DFSearch dfs = makeDfs(cp,
-                /* TODO: continue, are you branching on all the variables ? */
-                 and(firstFail(flatten((id))), firstFail(flatten(u)))
+                 and(
+                         firstFail(flatten(id)),
+                         firstFail(flatten(u)),
+                         firstFail(flatten(l)),
+                         firstFail(flatten(r)),
+                         firstFail(flatten(d)))
         );
 
 
@@ -169,7 +211,5 @@ public class Eternity {
         System.out.format("#Solutions: %s\n", stats.numberOfSolutions());
         System.out.format("Statistics: %s\n", stats);
         System.out.format("time: %s\n", System.currentTimeMillis()-t0);
-
-
     }
 }

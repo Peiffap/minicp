@@ -35,6 +35,11 @@ public class ShortTableCT extends AbstractConstraint {
     private BitSet[][] supports;
     private int[] dom; // domain iterator
 
+    private BitSet supportedTuples;
+    private BitSet tmpSupport;
+
+    private int STAR;
+
     /**
      * Create a Table constraint with short tuples.
      * <p>Assignment of {@code x_0=v_0, x_1=v_1,...} only valid if there exists a
@@ -48,7 +53,8 @@ public class ShortTableCT extends AbstractConstraint {
         super(x[0].getSolver());
         this.x = new IntVar[x.length];
         this.table = table;
-        dom = new int[Arrays.stream(x).map(var -> var.size()).max(Integer::compare).get()];
+        dom = new int[Arrays.stream(x).map(IntVar::size).max(Integer::compare).get()];
+        STAR = star;
 
         // Allocate supportedByVarVal
         supports = new BitSet[x.length][];
@@ -60,8 +66,20 @@ public class ShortTableCT extends AbstractConstraint {
         }
 
         // Set values in supportedByVarVal, which contains all the tuples supported by each var-val pair
-        // TODO: compute the supports (be careful, take into account the star value)
-         throw new NotImplementedException("ShortTableCT");
+        for (int t = 0; t < table.length; t++) { //i is the index of the tuple (in table)
+            for (int i = 0; i < x.length; i++) { //j is the index of the current variable (in x)
+                if (table[t][i] == STAR) {
+                    for (int j = 0; j < supports[i].length; j++) {
+                        supports[i][j].set(t);
+                    }
+                } else if (x[i].contains(table[t][i])) {
+                    supports[i][table[t][i] - x[i].min()].set(t);
+                }
+            }
+        }
+
+        supportedTuples = new BitSet(table.length);
+        tmpSupport = new BitSet(table.length);
     }
 
     @Override
@@ -73,8 +91,32 @@ public class ShortTableCT extends AbstractConstraint {
 
     @Override
     public void propagate() {
-        // TODO: implement the filtering
-         throw new NotImplementedException("ShortTableCT");
+        // Bit-set of tuple indices all set to 1
+        supportedTuples.set(0, table.length);
 
+        // compute supportedTuples as
+        // supportedTuples = (supports[0][x[0].min()] | ... | supports[0][x[0].max()] ) & ... &
+        //                   (supports[x.length][x[0].min()] | ... | supports[x.length][x[0].max()] )
+        //
+
+        for (int i = 0; i < supports.length; i++) {
+            tmpSupport.clear();
+            for (int j = 0; j < supports[i].length; j++) {
+                if (x[i].contains(j))
+                    tmpSupport.or(supports[i][j]);
+            }
+            supportedTuples.and(tmpSupport);
+        }
+
+        for (int i = 0; i < x.length; i++) {
+            int nVal = x[i].fillArray(dom);
+            for (int v = 0; v < nVal; v++) {
+                // the condition for removing the setValue dom[v] from x[i] is to check if
+                // there is no intersection between supportedTuples and the support[i][dom[v]]
+                if (!supportedTuples.intersects(supports[i][dom[v]])) {
+                    x[i].remove(dom[v]);
+                }
+            }
+        }
     }
 }
