@@ -15,12 +15,12 @@
 
 package minicp.search;
 
-
-import minicp.cp.BranchingScheme;
 import minicp.util.Procedure;
 import minicp.util.exception.NotImplementedException;
 
 import java.util.function.Supplier;
+
+import static minicp.cp.BranchingScheme.EMPTY;
 
 /**
  * Branching combinator
@@ -32,12 +32,12 @@ import java.util.function.Supplier;
  */
 public class LimitedDiscrepancyBranching implements Supplier<Procedure[]> {
 
-    private int curD;
+    private int curD = 0;
     private final int maxD;
     private final Supplier<Procedure[]> bs;
 
     /**
-     * Creates a discprepancy combinator on a given branching.
+     * Creates a discrepancy combinator on a given branching.
      *
      * @param branching the branching on which to apply the discrepancy combinator
      * @param maxDiscrepancy the maximum discrepancy limit. Any node exceeding
@@ -58,6 +58,26 @@ public class LimitedDiscrepancyBranching implements Supplier<Procedure[]> {
         // augment the curD depending on its position
         // +0 for alts[0], ..., +i for alts[i]
 
-         throw new NotImplementedException();
+        Procedure[] branches = bs.get();
+        if (branches.length == 0) {
+            return EMPTY;
+        }
+
+        // Compute maximum increase in discrepancy such that the maximum discrepancy is not exceeded.
+        int maxDiscrepancyIncrease = Math.min(maxD - curD + 1, branches.length);
+        Procedure[] sufficientlyOptimalBranchings = new Procedure[maxDiscrepancyIncrease];
+
+        for (int i = 0; i < maxDiscrepancyIncrease; ++i) {
+            final int newDiscrepancy = i + curD; // Compute new discrepancy.
+            Procedure branch = branches[i];
+
+            // Returned closure.
+            sufficientlyOptimalBranchings[i] = () -> {
+                curD = newDiscrepancy; // Update discrepancy.
+                branch.call(); // Call branch function.
+            };
+        }
+
+        return sufficientlyOptimalBranchings;
     }
 }
