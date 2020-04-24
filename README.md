@@ -2,29 +2,6 @@
 
 [![codecov](https://codecov.io/bb/pschaus/minicp/branch/master/graph/badge.svg?token=zAUOtKaB64)](https://codecov.io/bb/pschaus/minicp)
 
-The following document is a fork of the Bitbucket repository containing the original code of MiniCP, used to implement the required functionalities for the class LINGI2365 - Constraint Programming at UCLouvain. The following is a changelog of the various additions to the code, followed by the original README of the project.
-
-# Changelog
-[Part 1](https://minicp.readthedocs.io/en/latest/learning_minicp/part_1.html)
-------
-Implement [IsLessOrEqual.java](https://github.com/Peiffap/minicp/blob/master/src/main/java/minicp/engine/constraints/IsLessOrEqual.java).
-
-This is a reified constraint for `b` iff `x <= c` that is boolean variable `b` is set `true` if and only if `x` variable is less or equal to value `c`.
-
-For example the constraint holds for
-
-```java
-b = true , x = 4, c = 5
-b = false, x = 4, c = 2
-```
-but is violated for
-
-```java
-b = true , x = 5, c = 4
-b = false, x = 2, c = 4
-```
-Check that your implementation passes the tests [IsLessOrEqualTest.java](https://github.com/Peiffap/minicp/blob/master/src/test/java/minicp/engine/constraints/IsLessOrEqualTest.java).
-
 # README #
 
 * MiniCP technical documentation, exercises etc 
