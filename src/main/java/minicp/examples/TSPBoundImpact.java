@@ -23,6 +23,7 @@ import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.Objective;
 import minicp.search.SearchStatistics;
+import minicp.search.value.BoundImpactValueSelector;
 import minicp.util.exception.InconsistencyException;
 import minicp.util.exception.NotImplementedException;
 import minicp.util.io.InputReader;
@@ -44,7 +45,7 @@ public class TSPBoundImpact {
      * @return the value that if assigned to v induced the least augmentation of the objective obj
      */
     public static int boundImpactValueSelector(IntVar x, IntVar obj) {
-         throw new NotImplementedException("boundImpactValueSelector");
+         return new BoundImpactValueSelector(x, obj).value();
     }
 
 
@@ -79,8 +80,8 @@ public class TSPBoundImpact {
             if (xs == null)
                 return EMPTY;
             else {
-                //int v = boundImpactValueSelector(xs,totalDist);// now the first solution should have objective 2561
-                int v = xs.min(); // the first solution should have objective 4722
+                int v = boundImpactValueSelector(xs,totalDist);// now the first solution should have objective 2561
+                // int v = xs.min(); // the first solution should have objective 4722
                 return branch(() -> cp.post(equal(xs, v)),
                         () -> cp.post(notEqual(xs, v)));
             }
@@ -94,6 +95,26 @@ public class TSPBoundImpact {
 
         System.out.println(stats);
 
+        /*
+        Optimal solution: 2085
 
+        With BIVS:
+            initial: 2561
+            #choice: 3102806
+	        #fail: 1551404
+	        #sols : 23
+	        completed : true
+
+	    With FF:
+	        initial: 4722
+	        #choice: 4285744
+	        #fail: 2142873
+	        #sols : 104
+	        completed : true
+
+
+	    However, BIVS takes a long time to search, as the computation is very intensive.
+	    In practice, it would be smarter to use it only for the leftmost branch of the search tree.
+         */
     }
 }
