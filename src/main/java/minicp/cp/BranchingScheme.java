@@ -19,6 +19,7 @@ import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.LimitedDiscrepancyBranching;
 import minicp.search.Sequencer;
+import minicp.search.variable.ConflictOrderingSearch;
 import minicp.search.variable.LastConflictSearch;
 import minicp.util.Procedure;
 import minicp.util.exception.InconsistencyException;
@@ -195,7 +196,7 @@ public final class BranchingScheme {
      *                      it must be assigned on the left branch (and excluded on the right)
      */
     public static Supplier<Procedure[]> conflictOrderingSearch(Supplier<IntVar> variableSelector, Function<IntVar, Integer> valueSelector) {
-        throw new NotImplementedException();
+        return new ConflictOrderingSearch(variableSelector, valueSelector).search();
     }
 
 }
