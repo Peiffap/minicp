@@ -19,7 +19,9 @@ import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.LimitedDiscrepancyBranching;
 import minicp.search.Sequencer;
+import minicp.search.variable.LastConflictSearch;
 import minicp.util.Procedure;
+import minicp.util.exception.InconsistencyException;
 import minicp.util.exception.NotImplementedException;
 
 import java.util.function.Function;
@@ -57,6 +59,8 @@ import static minicp.cp.Factory.notEqual;
  * @see Factory#makeDfs(Solver, Supplier)
  */
 public final class BranchingScheme {
+
+    private static IntVar lastConflictVariable = null;
 
     private BranchingScheme() {
         throw new UnsupportedOperationException();
@@ -124,7 +128,7 @@ public final class BranchingScheme {
         return () -> {
             IntVar xs = selectMin(x,
                     xi -> xi.size() > 1,
-                    xi -> xi.size());
+                    IntVar::size);
             if (xs == null)
                 return EMPTY;
             else {
@@ -175,7 +179,7 @@ public final class BranchingScheme {
      *                      it must be assigned on the left branch (and excluded on the right)
      */
     public static Supplier<Procedure[]> lastConflict(Supplier<IntVar> variableSelector, Function<IntVar, Integer> valueSelector) {
-        throw new NotImplementedException();
+        return new LastConflictSearch(variableSelector, valueSelector).search();
     }
 
     /**
