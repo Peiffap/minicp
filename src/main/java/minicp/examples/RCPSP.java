@@ -15,17 +15,20 @@
 
 package minicp.examples;
 
+import minicp.cp.BranchingScheme;
 import minicp.engine.constraints.Cumulative;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.Objective;
 import minicp.search.SearchStatistics;
-import minicp.util.exception.NotImplementedException;
 import minicp.util.io.InputReader;
 
-import static minicp.cp.BranchingScheme.firstFail;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static minicp.cp.BranchingScheme.*;
 import static minicp.cp.Factory.*;
+import static minicp.examples.TSPBoundImpact.boundImpactValueSelector;
 
 
 /**
@@ -34,12 +37,11 @@ import static minicp.cp.Factory.*;
  */
 public class RCPSP {
 
-
     public static void main(String[] args) {
 
         // Reading the data
 
-        InputReader reader = new InputReader("data/rcpsp/j90_1_1.rcp");
+        InputReader reader = new InputReader("data/rcpsp/j30_1_1.rcp");
 
         int nActivities = reader.getInt();
         int nResources = reader.getInt();
@@ -83,18 +85,48 @@ public class RCPSP {
             end[i] = plus(start[i], duration[i]);
         }
 
-        // TODO 1: add the cumulative constraint to model the resource
+        // 1: add the cumulative constraint to model the resource
         // capa[r] is the capacity of resource r
         // consumption[r] is the consumption for each activity on the resource [r]
         // duration is the duration of each activity
+        for (int r = 0; r < nResources; r++) {
+            cp.post(new Cumulative(start, duration, consumption[r], capa[r]));
+        }
 
-        // TODO 2: add the precedence constraints
-        // successors[i] is the sucessors of activity i
+        // 2: add the precedence constraints
+        // successors[i] is the successors of activity i
 
-        // TODO 3: minimize the makespan
+        // Each successor of i should start after i has ended.
+        for (int i = 0; i < nActivities; i++) {
+            for (int j = 0; j < successors[i].length; j++) {
+                int succ = successors[i][j];
+                cp.post(lessOrEqual(end[i], start[succ]));
+            }
+        }
 
-        // TODO 4: implement the search
+        // 3: minimize the makespan
 
-        
+        IntVar makespan = maximum(end); // Makespan is last end time.
+
+        Objective obj = cp.minimize(makespan); // We want to minimize the makespan.
+
+        // 4: implement the search
+
+        // We use conflict ordering search because we're fancy.
+        DFSearch dfs = makeDfs(cp, BranchingScheme.conflictOrderingSearch(
+                () -> { // Select first unbound variable in start as fallback.
+                    for (IntVar z: start)
+                        if (!z.isBound())
+                            return z;
+                    return null;
+                },
+                xs -> boundImpactValueSelector(xs, makespan) // Use BIVS value selector.
+        ));
+
+        dfs.onSolution(() -> System.out.println(makespan)); // Print found solutions.
+
+        SearchStatistics stats = dfs.optimize(obj);
+
+        System.out.println(stats);
     }
 }
