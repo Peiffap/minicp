@@ -51,13 +51,26 @@ public class IsLessOrEqualVar extends AbstractConstraint {
 
     @Override
     public void post() {
-        // TODO
-         throw new NotImplementedException();
+        propagate();
+        if (isActive()) {
+            x.propagateOnDomainChange(this);
+            y.propagateOnDomainChange(this);
+            b.propagateOnBind(this);
+        }
     }
 
     @Override
     public void propagate() {
-        // TODO
-         throw new NotImplementedException();
+        if (b.isTrue()) {
+            x.removeAbove(y.max());
+            y.removeBelow(x.min());
+        } else if (b.isFalse()) {
+            x.removeBelow(y.min() + 1);
+            y.removeAbove(x.max() - 1);
+        } else if (x.max() <= y.min()) {
+            b.assign(true);
+        } else if (y.max() < x.min()) {
+            b.assign(false);
+        }
     }
 }
