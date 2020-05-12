@@ -52,6 +52,10 @@ public class ThetaTree {
             this.sump = sump;
         }
 
+        public boolean isEmpty() {
+            return ect == Integer.MIN_VALUE && sump == 0;
+        }
+
     }
 
     private Node[] nodes;
@@ -78,7 +82,7 @@ public class ThetaTree {
             isize <<= 1; //shift the pattern to the left by 1 (i.e. multiplies by 2)
         }
         //number of nodes in a complete  binary tree with isize leaf nodes is (isize*2)-1
-        nodes = new Node[(isize << 2) - 1];
+        nodes = new Node[(isize << 1) - 1];
         for (int i = 0; i < nodes.length; i++) {
             nodes[i] = new Node();
         }
@@ -178,7 +182,10 @@ public class ThetaTree {
                 nodes[1].getECT() + nodes[2].getSUMP()));
     }
 
-
+    public boolean isPresent(int pos) {
+        int curr_pos = isize + pos;
+        return !nodes[curr_pos].isEmpty();
+    }
 }
 
 
