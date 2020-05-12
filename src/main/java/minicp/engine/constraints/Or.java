@@ -56,7 +56,46 @@ public class Or extends AbstractConstraint { // x1 or x2 or ... xn
     @Override
     public void propagate() {
         // update watched literals
-        // TODO: implement the filtering using watched literal technique and make sure you pass all the tests
-         throw new NotImplementedException("Or");
+        // implement the filtering using watched literal technique and make sure you pass all the tests
+        int lo = wL.value();
+        int hi = wR.value();
+
+        // Find leftmost unbound variable.
+        while (lo < n && x[lo].isBound()) {
+            // If some variable is true, short-circuit.
+            if (x[lo].isTrue()) {
+                wL.setValue(lo);
+                this.setActive(false);
+                return;
+            }
+
+            lo++;
+        }
+
+        // Find rightmost unbound variable.
+        while (hi >= 0 && x[hi].isBound()) {
+            // If some variable is true, short-circuit.
+            if (x[hi].isTrue()) {
+                wR.setValue(hi);
+                this.setActive(false);
+                return;
+            }
+
+            hi--;
+        }
+
+        if (lo > hi) { // No true variable found, return inconsistency.
+            throw INCONSISTENCY;
+        } else if (lo == hi) { // One variable left, must be true.
+            x[lo].assign(true);
+            this.setActive(false);
+        } else { // Propagate if one of the watched literals gets bound.
+            x[lo].propagateOnBind(this);
+            x[hi].propagateOnBind(this);
+        }
+
+        // Update literals.
+        wL.setValue(lo);
+        wR.setValue(hi);
     }
 }
