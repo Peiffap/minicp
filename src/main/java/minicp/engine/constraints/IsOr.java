@@ -67,7 +67,37 @@ public class IsOr extends AbstractConstraint { // b <=> x1 or x2 or ... xn
 
     @Override
     public void propagate() {
-        // TODO Implement the constraint as efficiently as possible and make sure you pass all the tests
-         throw new NotImplementedException();
+        // Implement the constraint as efficiently as possible and make sure you pass all the tests
+        if (b.isTrue()) { // If b is true, post Or constraint.
+            getSolver().post(new Or(x));
+            this.setActive(false);
+        } else if (b.isFalse()) { // If b is false, set all unBound BoolVars to false.
+            int nU = nUnBounds.value();
+            for (int i = 0; i < nU; i++) {
+                x[unBounds[i]].assign(false);
+            }
+            this.setActive(false);
+        } else {
+            int nU = nUnBounds.value();
+            for (int i = 0; i < nU; i++) { // Iterate over unbound variables.
+                int idx = unBounds[i];
+                if (x[idx].isTrue()) { // If at least one variable is true, assign b to true.
+                    b.assign(true);
+                    this.setActive(false);
+                    return;
+                } else if (x[idx].isFalse()) { // If the variable is false, remove from unbounds.
+                    unBounds[i] = unBounds[nU - 1];
+                    unBounds[nU - 1] = idx;
+                    nU--;
+                }
+            }
+            nUnBounds.setValue(nU); // Update number of unbound vars
+
+            // If no unbound vars, then all are false, hence b is false too.
+            if (nU == 0) {
+                b.assign(false);
+                this.setActive(false);
+            }
+        }
     }
 }
