@@ -65,8 +65,8 @@ public class MiniCP implements Solver {
 
     @Override
     public void fixPoint() {
-        notifyFixPoint();
         try {
+            notifyFixPoint();
             while (!propagationQueue.isEmpty()) {
                 propagate(propagationQueue.remove());
             }
