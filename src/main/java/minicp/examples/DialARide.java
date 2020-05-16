@@ -1,10 +1,17 @@
 package minicp.examples;
 
+import minicp.engine.core.MiniCP;
+import minicp.engine.core.Solver;
+import minicp.state.StateManager;
 import minicp.util.io.InputReader;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+
+import static minicp.cp.Factory.makeSolver;
 
 public class DialARide {
 
@@ -26,57 +33,17 @@ public class DialARide {
         DialARideSolution solution = new DialARideSolution(nVehicles, pickupRideStops, dropRideStops, depot,
                 vehicleCapacity, maxRideTime, maxRouteDuration);
 
-        solution.addStop(0, 6, true);
-        solution.addStop(0, 21, true);
-        solution.addStop(0, 9, true);
-        solution.addStop(0, 10, true);
-        solution.addStop(0, 9, false);
-        solution.addStop(0, 10, false);
-        solution.addStop(0, 8, true);
-        solution.addStop(0, 6, false);
-        solution.addStop(0, 1, true);
-        solution.addStop(0, 22, true);
-        solution.addStop(0, 1, false);
-        solution.addStop(0, 17, true);
-        solution.addStop(0, 16, true);
-        solution.addStop(0, 14, true);
-        solution.addStop(0, 22, false);
-        solution.addStop(0, 23, true);
-        solution.addStop(0, 14, false);
-        solution.addStop(0, 11, true);
-        solution.addStop(0, 17, false);
-        solution.addStop(0, 21, false);
-        solution.addStop(0, 20, true);
-        solution.addStop(0, 11, false);
-        solution.addStop(0, 16, false);
-        solution.addStop(0, 19, true);
-        solution.addStop(0, 8, false);
-        solution.addStop(0, 19, false);
-        solution.addStop(0, 20, false);
-        solution.addStop(0, 23, false);
+        Solver cp = makeSolver(false);
 
-        solution.addStop(1, 13, true);
-        solution.addStop(1, 0, true);
-        solution.addStop(1, 3, true);
-        solution.addStop(1, 3, false);
-        solution.addStop(1, 15, true);
-        solution.addStop(1, 4, true);
-        solution.addStop(1, 7, true);
-        solution.addStop(1, 4, false);
-        solution.addStop(1, 12, true);
-        solution.addStop(1, 0, false);
-        solution.addStop(1, 15, false);
-        solution.addStop(1, 13, false);
-        solution.addStop(1, 7, false);
-        solution.addStop(1, 12, false);
 
-        solution.addStop(2, 5, true);
-        solution.addStop(2, 2, true);
-        solution.addStop(2, 2, false);
-        solution.addStop(2, 18, true);
-        solution.addStop(2, 5, false);
-        solution.addStop(2, 18, false);
+
         return solution;
+    }
+
+    public static void print(ArrayList<RideStop> a) {
+        for (RideStop rs: a) {
+            System.out.println(rs.window_end);
+        }
     }
 
     /**
