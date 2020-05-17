@@ -607,7 +607,7 @@ public final class Factory {
      * @return a constraint so that {@code x[i] != x[j] for all i < j}
      */
     public static Constraint allDifferent(IntVar[] x) {
-        return new AllDifferentBinary(x);
+        return new AllDifferentFW(x);
     }
 
     /**

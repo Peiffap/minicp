@@ -2,57 +2,57 @@ package minicp.engine.constraints;
 
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
+import minicp.engine.core.SparseSetDomain;
 import minicp.state.StateInt;
+import minicp.state.StateSparseSet;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.stream.IntStream;
+
+import static minicp.util.exception.InconsistencyException.INCONSISTENCY;
 
 public class AllDifferentFW extends AbstractConstraint {
 
     private IntVar[] x;
     private int n;
-    private int[] unBounds;
-    private StateInt nUnBounds;
+    private StateSparseSet unBounds;
 
     public AllDifferentFW(IntVar... x) {
         super(x[0].getSolver());
         this.x = x;
         this.n = x.length;
-        nUnBounds = getSolver().getStateManager().makeStateInt(n);
-        unBounds = IntStream.range(0, n).toArray();
+        unBounds = new StateSparseSet(getSolver().getStateManager(), n, 0);
     }
 
     @Override
     public void post() {
-        for (IntVar v : x) {
-            v.propagateOnBind(this);
+        for (int i = 0; i < x.length; i++) {
+            final int ii = i;
+
+            // When bound => propagate.
+            x[i].whenBind(() -> bind(ii));
+
+            // If already bound, should still propagate.
+            if (x[i].isBound()) {
+                bind(i);
+            }
         }
-        propagate();
     }
 
-    @Override
-    public void propagate() {
-        // Create list with bound values.
-        ArrayList<Integer> al = new ArrayList<>();
-        int nU = nUnBounds.value();
-        for (int i = nU - 1; i >= 0; i--) {
-            int idx = unBounds[i];
-            IntVar y = x[idx];
-            if (y.isBound()) {
-                al.add(x[idx].min());
-                unBounds[i] = unBounds[nU - 1];
-                unBounds[nU - 1] = idx;
-                nU--;
-            }
-        }
-        nUnBounds.setValue(nU);
+    public void bind(int i) {
+        unBounds.remove(i); // x[i] is now bound.
 
-        // Remove bound values from other domains.
-        for (int i = nU - 1; i >= 0; i--) {
-            for (int v : al) {
-                int idx = unBounds[i];
-                x[idx].remove(v);
-            }
+        int[] domUnbounds = new int[unBounds.size()];
+        unBounds.fillArray(domUnbounds);
+
+        for (int index: domUnbounds) {
+            x[index].remove(x[i].min());
+        }
+
+        // Optimization: deactivate the constraint if all variable are bounds.
+        if (unBounds.isEmpty()) {
+            this.setActive(false);
         }
     }
 
