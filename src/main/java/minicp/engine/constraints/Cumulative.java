@@ -69,16 +69,21 @@ public class Cumulative extends AbstractConstraint {
 
     @Override
     public void post() {
-        for (int i = 0; i < start.length; i++) {
-            start[i].propagateOnBoundChange(this);
-        }
+        if (capa == 1) {
+            getSolver().post(new Disjunctive(start, duration));
+            this.setActive(false);
+        } else {
+            for (int i = 0; i < start.length; i++) {
+                start[i].propagateOnBoundChange(this);
+            }
 
-        if (postMirror) {
-            IntVar[] startMirror = Factory.makeIntVarArray(start.length, i -> minus(end[i]));
-            getSolver().post(new Cumulative(startMirror, duration, demand, capa, false), false);
-        }
+            if (postMirror) {
+                IntVar[] startMirror = Factory.makeIntVarArray(start.length, i -> minus(end[i]));
+                getSolver().post(new Cumulative(startMirror, duration, demand, capa, false), false);
+            }
 
-        propagate();
+            propagate();
+        }
     }
 
     @Override
