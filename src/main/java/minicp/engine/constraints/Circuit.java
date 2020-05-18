@@ -19,9 +19,8 @@ package minicp.engine.constraints;
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
 import minicp.state.StateInt;
-import minicp.util.exception.NotImplementedException;
 
-import static minicp.cp.Factory.allDifferent;
+import static minicp.cp.Factory.allDifferentAC;
 
 /**
  * Hamiltonian Circuit Constraint with a successor model
@@ -58,7 +57,7 @@ public class Circuit extends AbstractConstraint {
     @Override
     public void post() {
         // Post allDifferent constraint.
-        getSolver().post(allDifferent(x));
+        getSolver().post(allDifferentAC(x));
 
         for (int i = 0; i < x.length; ++i) {
             int k = i;
