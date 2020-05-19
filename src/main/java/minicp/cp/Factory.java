@@ -510,7 +510,16 @@ public final class Factory {
     public static IntVar element(int[] array, IntVar y) {
         Solver cp = y.getSolver();
         IntVar z = makeIntVar(cp, IntStream.of(array).min().getAsInt(), IntStream.of(array).max().getAsInt());
-        cp.post(new Element1D(array, y, z));
+        cp.post(new Element1DDomainConsistent(array, y, z));
+        return z;
+    }
+
+    public static IntVar elementVar(IntVar[] array, IntVar y) {
+        Solver cp = y.getSolver();
+        int min = Arrays.stream(array).mapToInt(IntVar::min).min().getAsInt();
+        int max = Arrays.stream(array).mapToInt(IntVar::max).max().getAsInt();
+        IntVar z = makeIntVar(cp, min,max);
+        cp.post(new Element1DVar(array, y, z));
         return z;
     }
 
