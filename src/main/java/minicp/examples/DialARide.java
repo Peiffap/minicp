@@ -1,17 +1,13 @@
 package minicp.examples;
 
-import minicp.cp.BranchingScheme;
 import minicp.engine.constraints.Circuit;
-import minicp.engine.constraints.Element1DDomainConsistent;
+import minicp.engine.constraints.Element1D;
 import minicp.engine.constraints.Element1DVar;
-import minicp.engine.constraints.IsEqual;
 import minicp.engine.core.BoolVar;
-import minicp.engine.core.BoolVarImpl;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.Objective;
-import minicp.search.SearchStatistics;
 import minicp.util.io.InputReader;
 
 import java.util.*;
@@ -20,6 +16,7 @@ import java.util.stream.IntStream;
 import static minicp.cp.BranchingScheme.*;
 import static minicp.cp.BranchingScheme.branch;
 import static minicp.cp.Factory.*;
+import static minicp.examples.MakeGraphFile.writeGraphFile;
 
 public class DialARide {
 
@@ -95,9 +92,11 @@ public class DialARide {
         IntVar[] distPrec = makeIntVarArray(cp, m, 10000); // Distance to predecessor.
         IntVar[] distanceSinceDepot = makeIntVarArray(cp, m, 10000); // Distance since depot.
         IntVar[] vehicles = makeIntVarArray(cp, m, k); // Truck serving a stop.
-        IntVar[] load = makeIntVarArray(cp, m, vehicleCapacity); // Capacity at each stop.
+        IntVar[] load = makeIntVarArray(cp, m, vehicleCapacity+1); // Capacity at each stop.
+        IntVar[] totalDistance = makeIntVarArray(cp, m, 100000); // Monotonous distance.
 
         // Set variables at depots.
+        cp.post(equal(totalDistance[0], 0));
         for (int i = 0; i < k; i++) {
             cp.post(equal(vehicles[startDepots[i]], i)); // startDepots[i] is served by truck i.
             cp.post(equal(vehicles[endDepots[i]], i)); // endDepots[i] is served by truck i.
@@ -112,6 +111,11 @@ public class DialARide {
             cp.post(equal(distPrec[startDepots[i]], 0)); // Distance to predecessor is 0 from start depot.
 
             cp.post(equal(distanceSinceDepot[startDepots[i]], 0)); // Start depots have distance 0.
+
+            // Depots cannot be adjacent in the path.
+            IntVar tmp = makeIntVarSingleton(cp, 2*k);
+            cp.post(largerOrEqual(succ[startDepots[i]], tmp));
+            cp.post(largerOrEqual(prec[endDepots[i]], tmp));
         }
 
         // End depots go to start depots.
@@ -122,17 +126,27 @@ public class DialARide {
             cp.post(equal(prec[startDepots[i+1]], endDepots[i]));
         }
 
-        // Depots cannot be adjacent in the path.
-        for (int i = 0; i < k; i++) {
-            cp.post(isLarger(succ[startDepots[i]], 2*k-1));
-            cp.post(isLarger(prec[endDepots[i]], 2*k-1));
-        }
-
         // Additional constraints.
         for (int i = 2*k; i < 2*k + n; i++) {
             for (int j = 0; j < k; j++) {
                 cp.post(notEqual(succ[i], endDepots[j])); // Pick up cannot be followed by end depot.
                 cp.post(notEqual(prec[n + i], startDepots[j])); // Drop cannot be preceded by start depot.
+            }
+        }
+
+        for (int i = 0; i < k-1; i++) {
+            cp.post(lessOrEqual(distanceSinceDepot[endDepots[i]], distanceSinceDepot[endDepots[i + 1]]));
+            cp.post(lessOrEqual(totalDistance[endDepots[i]], totalDistance[endDepots[i + 1]]));
+        }
+
+        for (int i = 0; i < m; i++) {
+            if (i != 2*k-1) {
+                IntVar tDsucc = elementVar(totalDistance, succ[i]);
+                cp.post(equal(tDsucc, sum(totalDistance[i], distSucc[i])));
+            }
+            if (i != 0) {
+                IntVar tDprec = elementVar(totalDistance, prec[i]);
+                cp.post(equal(totalDistance[i], sum(tDprec, distPrec[i])));
             }
         }
 
@@ -152,8 +166,8 @@ public class DialARide {
         // distanceMatrix[i][succ[i]] = distSucc[i]
         // distanceMatrix[i][prec[i]] = distPrec[i]
         for (int i = 0; i < m; i++) {
-            cp.post(new Element1DDomainConsistent(distanceMatrix[i], succ[i], distSucc[i]));
-            cp.post(new Element1DDomainConsistent(distanceMatrix[i], prec[i], distPrec[i]));
+            cp.post(new Element1D(distanceMatrix[i], succ[i], distSucc[i]));
+            cp.post(new Element1D(distanceMatrix[i], prec[i], distPrec[i]));
         }
 
         // Channel between distSucc and distPrec.
@@ -196,8 +210,9 @@ public class DialARide {
         }
 
         // Maximum route duration constraint.
+        cp.post(lessOrEqual(distanceSinceDepot[endDepots[k-1]], maxRouteDuration));
         for (int i = 0; i < m; i++) {
-            cp.post(lessOrEqual(distanceSinceDepot[i], maxRouteDuration));
+            cp.post(lessOrEqual(distanceSinceDepot[i], distanceSinceDepot[endDepots[k-1]]));
         }
 
         for (int i = 2*k; i < 2*k + n; i++) {
@@ -205,7 +220,8 @@ public class DialARide {
             cp.post(lessOrEqual(sum(distanceSinceDepot[i + n], minus(distanceSinceDepot[i])), maxRideTime));
 
             // Time windows.
-            cp.post(lessOrEqual(distanceSinceDepot[i], distanceSinceDepot[n+i])); // Pick up before drop.
+            cp.post(lessOrEqual(plus(distanceSinceDepot[i], distanceMatrix[i][n+i]), distanceSinceDepot[n+i])); // Pick up before drop.
+            cp.post(lessOrEqual(plus(totalDistance[i], distanceMatrix[i][n+i]), totalDistance[n+i])); // Pick up before drop.
             cp.post(lessOrEqual(distanceSinceDepot[i], pickupRideStops.get(i - 2*k).window_end)); // Pick up before deadline.
             cp.post(lessOrEqual(distanceSinceDepot[i + n], dropRideStops.get(i - 2*k).window_end)); // Drop before deadline.
         }
@@ -222,59 +238,77 @@ public class DialARide {
         }
 
         // Objective: minimize total distance.
-        IntVar totalDistance = sum(distSucc);
-        Objective obj = cp.minimize(totalDistance);
+        Objective obj = cp.minimize(totalDistance[endDepots[k-1]]);
 
-        // Variable selection: min-regret.
-        // Choose the variable xi which has the largest difference between the closest two successor cities:
-        // s1(xi) = min(distanceMatrix[xi][.])
-        // s2(xi) = min(distanceMatrix[xi][.] \ {distanceMatrix[xi][indexOf(s1)]})
-        // xi : max(s2(xi) - s1(xi))
-
-        DFSearch dfs = new DFSearch(cp.getStateManager(), BranchingScheme.conflictOrderingSearch(() -> {
-            IntVar xs = selectMin(succ,
-                    xi -> xi.size() > 1,
-                    xi -> {
-                        int[] xidom = new int[xi.size()];
-                        xi.fillArray(xidom);
-                        int i = Arrays.asList(succ).indexOf(xi);
-                        int s1val = Integer.MAX_VALUE;
-                        int s2val = Integer.MAX_VALUE;
-                        for (int j : xidom) {
-                            int d = distanceMatrix[i][j];
-                            if (d < s1val) {
-                                s2val = s1val;
-                                s1val = d;
-                            } else if (d < s2val) {
-                                s2val = d;
-                            }
-                        }
-                        return s1val - s2val;
-                    });
-            return xs;
-        }, xs -> {
-            // Value selection: select successor with minimal distance.
-            if (xs == null) {
-                return null;
-            } else {
-                int j = Arrays.asList(succ).indexOf(xs);
-                int[] xsdom = new int[xs.size()];
-                xs.fillArray(xsdom);
-                int minDist = Integer.MAX_VALUE;
-                int index = -1;
-                for (int value : xsdom) {
-                    if (distanceMatrix[value][j] < minDist) {
-                        minDist = distanceMatrix[value][j];
-                        index = value;
+        DFSearch dfs = makeDfs(cp, () -> {
+            /*IntVar xs = null;
+            int score = m;
+            for (int i = 0; i < m; i++) {
+                if (!succ[i].isBound() && prec[i].isBound()) {
+                    if (succ[i].size() < score) {
+                        score = succ[i].size();
+                        xs = succ[i];
                     }
                 }
-                return index;
+            }*/
+
+            IntVar xs = succ[0];
+            int val = 0;
+            while (xs.isBound()) {
+                xs = succ[xs.min()];
+                val = xs.min();
+                if (xs == succ[0]) {
+                    return EMPTY;
+                }
             }
-        }));
 
+            // If any drops are available, take the closest one.
+            int[] dom = new int[xs.size()];
+            xs.fillArray(dom);
+            ArrayList<Integer> availableDrops = new ArrayList<>();
+            for (int i = 0; i < dom.length; i++) {
+                if (dom[i] >= 2*k + n && prec[dom[i]-n].isBound()) {
+                    availableDrops.add(dom[i]);
+                }
+            }
 
-        int[] xBest = IntStream.range(0, n).toArray();
+            int index = xs.min();
+            if (availableDrops.isEmpty()) {
+                ArrayList<Integer> availablePicks = new ArrayList<>();
+                for (int i = 0; i < dom.length; i++) {
+                    if (dom[i] >= 2*k) {
+                        availablePicks.add(dom[i]);
+                    }
+                }
+                if (availablePicks.isEmpty()) {
+                    index = xs.min();
+                } else {
+                    int minDistance = Integer.MAX_VALUE;
+                    for (int i = 0; i < availablePicks.size(); i++) {
+                        if (distanceMatrix[val][availablePicks.get(i)] < minDistance) {
+                            minDistance = distanceMatrix[val][availablePicks.get(i)];
+                            index = availablePicks.get(i);
+                        }
+                    }
+                }
+            } else {
+                int minDistance = Integer.MAX_VALUE;
+                for (int i = 0; i < availableDrops.size(); i++) {
+                    if (distanceMatrix[val][availableDrops.get(i)] < minDistance) {
+                        minDistance = distanceMatrix[val][availableDrops.get(i)];
+                        index = availableDrops.get(i);
+                    }
+                }
+            }
 
+            IntVar x = xs;
+            int v = index;
+            return branch(() -> x.getSolver().post(equal(x, v)),
+                    () -> x.getSolver().post(notEqual(x, v)));
+        });
+        //DFSearch dfs = makeDfs(cp, firstFail(succ));
+
+        int[] xBest = IntStream.range(0, m).toArray();
         dfs.onSolution(() -> {
             DialARideSolution solution = new DialARideSolution(nVehicles, pickupRideStops, dropRideStops, depot, vehicleCapacity, maxRideTime, maxRouteDuration);
             int i = succ[0].min();
@@ -293,32 +327,41 @@ public class DialARide {
             }
             System.out.println(solution);
 
-            for (int j = 0; j < n; j++) {
+            for (int j = 0; j < m; j++) {
                 xBest[j] = succ[j].min();
             }
         });
 
-        int nRestarts = 1000;
+        dfs.solve(statistics -> {
+            return statistics.numberOfSolutions() > 0;
+        });
+
+        int nRestarts = 1000000000;
         int failureLimit = 1000;
         Random rand = new java.util.Random(0);
 
         for (int i = 0; i < nRestarts; i++) {
             dfs.optimizeSubjectTo(obj, statistics -> statistics.numberOfFailures() >= failureLimit, () -> {
                 // Assign the fragment 5% of the variables randomly chosen
-                for (int j = 0; j < n; j++) {
-                    if (rand.nextInt(100) < 35) {
+                for (int j = 2*k; j < m; j++) {
+                    if (rand.nextInt(100) < 5) {
                         // after the solveSubjectTo those constraints are removed
                         cp.post(equal(succ[j], xBest[j]));
                     }
                 }
             });
+
         }
 
-        SearchStatistics stats = dfs.optimize(obj);
-
-        // System.out.println(stats);
-
         return null;
+    }
+
+    public static int average(int[] array) {
+        int sum = 0;
+        for (int i : array) {
+            sum += i;
+        }
+        return sum/array.length;
     }
 
     public static void print(ArrayList<RideStop> a) {
@@ -487,7 +530,7 @@ public class DialARide {
         // Reading the data
 
         //TODO change file to test the various instances.
-        InputReader reader = new InputReader("data/dialaride/custom1");
+        InputReader reader = new InputReader("data/dialaride/custom3");
 
         int nVehicles = reader.getInt();
         reader.getInt(); //ignore

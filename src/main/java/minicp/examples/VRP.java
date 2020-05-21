@@ -17,18 +17,13 @@ package minicp.examples;
 
 import minicp.cp.BranchingScheme;
 import minicp.engine.constraints.Circuit;
-import minicp.engine.constraints.Element1D;
 import minicp.engine.constraints.Element1DDomainConsistent;
-import minicp.engine.constraints.Element1DVar;
+import minicp.engine.constraints.Element1DVarDC;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
-import minicp.search.LimitedDiscrepancyBranching;
 import minicp.search.Objective;
-import minicp.util.exception.InconsistencyException;
 import minicp.util.io.InputReader;
-import minicp.search.SearchStatistics;
-import sun.plugin.dom.core.Element;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -112,13 +107,12 @@ public class VRP {
 
         cp.post(new Circuit(succ));
 
-        cp.post(equal(sum(succ), (n+k-1)*(n+k)/2));
         cp.post(equal(cumulativeDistance[0], 0));
         cp.post(equal(succ[n+k-1], 0));
         cp.post(equal(distSucc[n+k-1],0));
         for (int i = 0; i < n+k-1; i++) {
             cp.post(new Element1DDomainConsistent(distanceMatrix[i], succ[i], distSucc[i]));
-            cp.post(new Element1DVar(cumulativeDistance, succ[i], sum(cumulativeDistance[i], distSucc[i])));
+            cp.post(new Element1DVarDC(cumulativeDistance, succ[i], sum(cumulativeDistance[i], distSucc[i])));
         }
 
         for (int i = 1; i < k; i++) {
@@ -239,6 +233,8 @@ public class VRP {
         System.out.println(stats);
          */
         // Current best solution
+
+        cp.post(equal(succ[0], 3));
         int[] xBest = IntStream.range(0, n).toArray();
 
         dfs.onSolution(() -> {

@@ -16,7 +16,7 @@
 package minicp.examples;
 
 import minicp.engine.constraints.Element1D;
-import minicp.engine.constraints.Element1DVar;
+import minicp.engine.constraints.Element1DVarDC;
 import minicp.engine.core.BoolVar;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.IntVarImpl;
@@ -26,7 +26,6 @@ import minicp.search.SearchStatistics;
 import minicp.util.io.InputReader;
 
 import java.util.Arrays;
-import java.util.HashSet;
 
 import static minicp.cp.BranchingScheme.and;
 import static minicp.cp.BranchingScheme.firstFail;
@@ -91,7 +90,7 @@ public class StableMariage {
 
         for (int m = 0; m < n; m++) {
             // the husband of the wife of man m is m
-            cp.post(new Element1DVar(husband, wife[m], new IntVarImpl(cp, m, m)));
+            cp.post(new Element1DVarDC(husband, wife[m], new IntVarImpl(cp, m, m)));
 
             // rankWomen[m][wife[m]] == wifePref[m]
             cp.post(new Element1D(rankWomen[m], wife[m], wifePref[m]));
@@ -99,7 +98,7 @@ public class StableMariage {
 
         for (int w = 0; w < n; w++) {
             // the wife of the husband of woman i is i
-            cp.post(new Element1DVar(wife, husband[w], new IntVarImpl(cp, w, w)));
+            cp.post(new Element1DVarDC(wife, husband[w], new IntVarImpl(cp, w, w)));
             
 
             // rankMen[w][husband[w]] == husbandPref[w]

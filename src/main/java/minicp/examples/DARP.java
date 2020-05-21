@@ -15,22 +15,16 @@
 
 package minicp.examples;
 
-import minicp.cp.Factory;
 import minicp.engine.constraints.Circuit;
-import minicp.engine.constraints.Element1D;
-import minicp.engine.constraints.Element1DVar;
-import minicp.engine.constraints.TableCT;
+import minicp.engine.constraints.Element1DVarDC;
 import minicp.engine.core.IntVar;
-import minicp.engine.core.MiniCP;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
-import minicp.util.io.InputReader;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
-import static minicp.cp.BranchingScheme.and;
 import static minicp.cp.BranchingScheme.firstFail;
 import static minicp.cp.Factory.*;
 
@@ -45,7 +39,7 @@ public class DARP {
         int min = IntStream.range(0, array.length).map(i -> array[i].min()).min().getAsInt();
         int max = IntStream.range(0, array.length).map(i -> array[i].max()).max().getAsInt();
         IntVar z = makeIntVar(cp, min,max);
-        cp.post(new Element1DVar(array, y, z));
+        cp.post(new Element1DVarDC(array, y, z));
         return z;
     }
 

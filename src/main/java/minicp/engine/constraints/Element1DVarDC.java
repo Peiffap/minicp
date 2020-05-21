@@ -22,7 +22,7 @@ import minicp.util.exception.NotImplementedException;
 import java.util.Arrays;
 import java.util.HashSet;
 
-public class Element1DVar extends AbstractConstraint {
+public class Element1DVarDC extends AbstractConstraint {
 
     private final IntVar[] array;
     private final IntVar y;
@@ -30,9 +30,9 @@ public class Element1DVar extends AbstractConstraint {
 
     private static int[] supportT; // Used for residue caching.
     private static boolean[] residueAssigned; // Used for residue caching.
-    
 
-    public Element1DVar(IntVar[] array, IntVar y, IntVar z) {
+
+    public Element1DVarDC(IntVar[] array, IntVar y, IntVar z) {
         super(y.getSolver());
         this.array = array;
         supportT = new int[array.length];

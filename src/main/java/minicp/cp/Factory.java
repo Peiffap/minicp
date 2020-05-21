@@ -101,6 +101,17 @@ public final class Factory {
     }
 
     /**
+     * Creates a variable with a domain equal to the specified value.
+     *
+     * @param cp the solver in which the variable is created
+     * @param val the value
+     * @return a variable with domain equal to val
+     */
+    public static IntVar makeIntVarSingleton(Solver cp, int val) {
+        return new IntVarImpl(cp, val, val);
+    }
+
+    /**
      * Creates a variable with a domain equal to the specified set of values.
      *
      * @param cp the solver in which the variable is created
@@ -510,7 +521,7 @@ public final class Factory {
     public static IntVar element(int[] array, IntVar y) {
         Solver cp = y.getSolver();
         IntVar z = makeIntVar(cp, IntStream.of(array).min().getAsInt(), IntStream.of(array).max().getAsInt());
-        cp.post(new Element1DDomainConsistent(array, y, z));
+        cp.post(new Element1D(array, y, z));
         return z;
     }
 
