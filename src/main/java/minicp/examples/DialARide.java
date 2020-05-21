@@ -8,6 +8,9 @@ import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.Objective;
+import minicp.state.StateInt;
+import minicp.state.TrailInt;
+import minicp.util.Procedure;
 import minicp.util.io.InputReader;
 
 import java.util.*;
@@ -240,71 +243,229 @@ public class DialARide {
         // Objective: minimize total distance.
         Objective obj = cp.minimize(totalDistance[endDepots[k-1]]);
 
-        DFSearch dfs = makeDfs(cp, () -> {
-            /*IntVar xs = null;
-            int score = m;
-            for (int i = 0; i < m; i++) {
-                if (!succ[i].isBound() && prec[i].isBound()) {
-                    if (succ[i].size() < score) {
-                        score = succ[i].size();
-                        xs = succ[i];
-                    }
-                }
-            }*/
-
-            IntVar xs = succ[0];
-            int val = 0;
-            while (xs.isBound()) {
-                xs = succ[xs.min()];
-                val = xs.min();
-                if (xs == succ[0]) {
-                    return EMPTY;
+        /*DFSearch dfs = makeDfs(cp, () -> {
+            // Variable selection.
+            int minimalSize = m;
+            for (int i = 0; i < succ.length; i++) {
+                IntVar xi = succ[i];
+                if (!xi.isBound() && xi.size() < minimalSize) {
+                    minimalSize = xi.size();
                 }
             }
 
-            // If any drops are available, take the closest one.
-            int[] dom = new int[xs.size()];
-            xs.fillArray(dom);
-            ArrayList<Integer> availableDrops = new ArrayList<>();
-            for (int i = 0; i < dom.length; i++) {
-                if (dom[i] >= 2*k + n && prec[dom[i]-n].isBound()) {
-                    availableDrops.add(dom[i]);
+            if (minimalSize == m) {
+                return EMPTY;
+            }
+
+            ArrayList<Integer> s = new ArrayList<>();
+            for (int i = 0; i < succ.length; i++) {
+                IntVar xi = succ[i];
+                if (xi.size() == minimalSize) {
+                    s.add(i);
                 }
             }
 
-            int index = xs.min();
-            if (availableDrops.isEmpty()) {
-                ArrayList<Integer> availablePicks = new ArrayList<>();
-                for (int i = 0; i < dom.length; i++) {
-                    if (dom[i] >= 2*k) {
-                        availablePicks.add(dom[i]);
-                    }
-                }
-                if (availablePicks.isEmpty()) {
-                    index = xs.min();
-                } else {
-                    int minDistance = Integer.MAX_VALUE;
-                    for (int i = 0; i < availablePicks.size(); i++) {
-                        if (distanceMatrix[val][availablePicks.get(i)] < minDistance) {
-                            minDistance = distanceMatrix[val][availablePicks.get(i)];
-                            index = availablePicks.get(i);
+            int bestIndex;
+            if (s.size() == 1) {
+                bestIndex = s.get(0);
+            } else {
+                HashMap<Integer, Integer> values = new HashMap<>();
+                for (int i = 0; i < s.size(); i++) {
+                    IntVar si = succ[s.get(i)];
+                    int[] tmp = new int[si.size()];
+                    si.fillArray(tmp);
+                    for (int val: tmp) {
+                        if (values.get(val) == null) {
+                            values.put(val, 1);
+                        } else {
+                            int curr = values.get(val);
+                            values.put(val, curr + 1);
                         }
                     }
                 }
+
+                int[] score = new int[s.size()];
+                int max = 0;
+                int index = 0;
+                for (int i = 0; i < score.length; i++) {
+                    IntVar si = succ[s.get(i)];
+                    int[] tmp = new int[si.size()];
+                    si.fillArray(tmp);
+                    for (int val: tmp) {
+                        score[i] += values.get(val);
+                    }
+                    if (score[i] > max) {
+                        index = s.get(i);
+                        max = score[i];
+                    }
+                }
+                bestIndex = index;
+            }
+
+            // Value selection.
+            ArrayList<Integer> partialRoute = new ArrayList<>();
+            int ctr = bestIndex;
+            while (prec[ctr].isBound() && !(ctr < 2*k && ctr % 2 == 0)) {
+                partialRoute.add(prec[ctr].min());
+                ctr = prec[ctr].min();
+            }
+
+            int val;
+            if (partialRoute.isEmpty()) {
+                val = succ[bestIndex].min();
             } else {
-                int minDistance = Integer.MAX_VALUE;
-                for (int i = 0; i < availableDrops.size(); i++) {
-                    if (distanceMatrix[val][availableDrops.get(i)] < minDistance) {
-                        minDistance = distanceMatrix[val][availableDrops.get(i)];
-                        index = availableDrops.get(i);
+                ArrayList<Integer> pickups = new ArrayList<>();
+                ArrayList<Integer> drops = new ArrayList<>();
+                int currentDepot = -1;
+                for (int i: partialRoute) {
+                    if (i < 2*k) {
+                        currentDepot = i;
+                    } else if (i < 2*k+n) {
+                        pickups.add(i);
+                    } else {
+                        drops.add(i);
+                    }
+                }
+
+                ArrayList<Integer> available = new ArrayList<>();
+                for (int i: pickups) {
+                    if (!drops.contains(i + n)) {
+                        available.add(i + n);
+                    }
+                }
+
+                Random r = new java.util.Random();
+                if (available.isEmpty() || r.nextInt(100) < 30) {
+                    ArrayList<Integer> ps = new ArrayList<>();
+                    int[] tmp = new int[succ[bestIndex].size()];
+                    succ[bestIndex].fillArray(tmp);
+                    for (int i: tmp) {
+                        if (i >= 2*k && i <= 2*k+n) {
+                            ps.add(i);
+                        }
+                    }
+                    if (ps.isEmpty() || r.nextInt(100) < 10) {
+                        val = currentDepot + 1;
+                    } else {
+                        int lowestIndex = 0;
+                        int minDistance = Integer.MAX_VALUE;
+                        for (int i = 0; i < ps.size(); i++) {
+                            if (distanceMatrix[bestIndex][ps.get(i)] < minDistance) {
+                                minDistance = distanceMatrix[bestIndex][ps.get(i)];
+                                lowestIndex = ps.get(i);
+                            }
+                        }
+                        val = lowestIndex;
+                    }
+                } else {
+                    int lowestIndex = 0;
+                    int minDistance = Integer.MAX_VALUE;
+                    for (int i = 0; i < available.size(); i++) {
+                        if (distanceMatrix[bestIndex][available.get(i)] < minDistance) {
+                            minDistance = distanceMatrix[bestIndex][available.get(i)];
+                            lowestIndex = available.get(i);
+                        }
+                    }
+                    val = lowestIndex;
+                }
+            }
+            int finalBestIndex = bestIndex;
+            int finalVal = val;
+            return branch(() -> succ[finalBestIndex].getSolver().post(equal(succ[finalBestIndex], finalVal)),
+                    () -> succ[finalBestIndex].getSolver().post(notEqual(succ[finalBestIndex], finalVal)));
+        });*/
+
+        StateInt currentIndex = cp.getStateManager().makeStateInt(0);
+        StateInt currentVehicle = cp.getStateManager().makeStateInt(0);
+
+        DFSearch dfs = makeDfs(cp, () -> {
+            // Check if all done
+            boolean allBound = true;
+            for (int i = 0; i < m; i++) {
+                if (!succ[i].isBound()) {
+                    allBound = false;
+                    break;
+                }
+            }
+            if (allBound) {
+                return EMPTY;
+            }
+
+            IntVar var = succ[currentIndex.value()]; // Variable we branch on
+            // if (var.isBound()) { System.out.println("Not normal " + previousIndex.value()); }
+
+            int[] domI = new int[var.size()];
+            var.fillArray(domI);
+
+            // We have the variable: it is the successor of the
+            // variable previously bound in the search
+            // Now we branch on the values
+            // First branch is the drop of someone previously picked up
+
+            int nearestDrop = -1;
+            int dropDist = Integer.MAX_VALUE;
+            int nearestPick = -1;
+            int pickDist = Integer.MAX_VALUE;
+            for (int i: domI) {
+                if (i >= 2*k + n) { // Drop node
+                    // Or check if exists j: succ[j] is bound to i-m
+                    IntVar successorOfPicked = succ[i - n];
+                    if (successorOfPicked == var || successorOfPicked.isBound()) {
+                        // Picked up but not dropped
+                        if (distanceMatrix[currentIndex.value()][i] < dropDist) {
+                            dropDist = distanceMatrix[currentIndex.value()][i];
+                            nearestDrop = i;
+                        }
+                    }
+                } else if (i >= 2*k) { // Pick up node
+                    if (distanceMatrix[currentIndex.value()][i] < pickDist) {
+                        pickDist = distanceMatrix[currentIndex.value()][i];
+                        nearestPick = i;
                     }
                 }
             }
-
-            IntVar x = xs;
-            int v = index;
-            return branch(() -> x.getSolver().post(equal(x, v)),
-                    () -> x.getSolver().post(notEqual(x, v)));
+            //System.out.println( "nbPeople = " + nbPeople[currentIndex.value()]);
+            if (nearestDrop != -1) {
+                final int candidate = nearestDrop;
+                //System.out.println("drop " + previousIndex.value() + " " + currentIndex.value() + " " + candidate);
+                Procedure p1 = () -> {
+                    currentIndex.setValue(candidate);
+                    cp.post(equal(var, candidate));
+                };
+                return branch(p1, () -> {
+                    cp.post(notEqual(var, candidate));
+                });
+            }
+            if (nearestPick != -1) {
+                final int nearestFinal = nearestPick;
+                //System.out.println("pick " + previousIndex.value() + " " + currentIndex.value() + " " + nearestFinal);
+                Procedure p2 = () -> {
+                    currentIndex.setValue(nearestFinal);
+                    cp.post(equal(var, nearestFinal));
+                };
+                return branch(p2, () -> {
+                    cp.post(notEqual(var, nearestFinal));
+                });
+            }
+            // Else: take min value
+            final int v = var.min();
+            if (v < 2*k) {
+                return branch(() -> {
+                    //System.out.println("else " + previousIndex.value() + " " + currentIndex.value() + " " + v);
+                    currentIndex.setValue(v);
+                    currentVehicle.increment();
+                    cp.post(equal(var, v));
+                }, () -> {
+                    cp.post(notEqual(var, v));
+                });
+            }
+            return branch(() -> {
+                //System.out.println("else " + previousIndex.value() + " " + currentIndex.value() + " " + v);
+                currentIndex.setValue(v);
+                cp.post(equal(var, v));
+            }, () -> {
+                cp.post(notEqual(var, v));
+            });
         });
         //DFSearch dfs = makeDfs(cp, firstFail(succ));
 
@@ -343,7 +504,7 @@ public class DialARide {
         for (int i = 0; i < nRestarts; i++) {
             dfs.optimizeSubjectTo(obj, statistics -> statistics.numberOfFailures() >= failureLimit, () -> {
                 // Assign the fragment 5% of the variables randomly chosen
-                for (int j = 2*k; j < m; j++) {
+                for (int j = 0; j < m; j++) {
                     if (rand.nextInt(100) < 5) {
                         // after the solveSubjectTo those constraints are removed
                         cp.post(equal(succ[j], xBest[j]));
@@ -530,7 +691,7 @@ public class DialARide {
         // Reading the data
 
         //TODO change file to test the various instances.
-        InputReader reader = new InputReader("data/dialaride/custom3");
+        InputReader reader = new InputReader("data/dialaride/custom0");
 
         int nVehicles = reader.getInt();
         reader.getInt(); //ignore
