@@ -16,101 +16,92 @@
 package minicp.engine.constraints;
 
 import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.Constraint;
 import minicp.engine.core.IntVar;
-import minicp.util.exception.NotImplementedException;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import static minicp.cp.Factory.makeIntVar;
 
 public class Element1DVar extends AbstractConstraint {
 
-    private final IntVar[] array;
+    private final IntVar[] T;
+    private final IntVar x;
     private final IntVar y;
-    private final IntVar z;
+    private final int n;
 
-    private static int[] supportT; // Used for residue caching.
-    private static boolean[] residueAssigned; // Used for residue caching.
-    
-
-    public Element1DVar(IntVar[] array, IntVar y, IntVar z) {
+    public Element1DVar(IntVar[] T, IntVar x, IntVar y) {
         super(y.getSolver());
-        this.array = array;
-        supportT = new int[array.length];
-        residueAssigned = new boolean[array.length];
+
+        this.T = T;
+        this.n = T.length;
+        this.x = x;
         this.y = y;
-        this.z = z;
     }
 
     @Override
     public void post() {
-        y.removeBelow(0);
-        y.removeAbove(array.length - 1);
-        y.propagateOnDomainChange(this);
-        z.propagateOnDomainChange(this);
+        x.removeBelow(0);
+        x.removeAbove(n - 1);
+
+        x.propagateOnDomainChange(this);
+        y.propagateOnBoundChange(this);
         propagate();
     }
 
     @Override
     public void propagate() {
-        // Domain of y.
-        int[] Dy = new int[y.size()];
-        y.fillArray(Dy);
 
-        // Domain of z.
-        int[] Dz = new int[z.size()];
-        z.fillArray(Dz);
+        int[] xDomain = new int[x.size()];
+        int xSize = x.fillArray(xDomain);
 
-        // Remove i from D(y) if T[i] and D(z) are disjoint.
-        for (int i : Dy) {
-            int[] DTi = new int[array[i].size()];
-            array[i].fillArray(DTi);
-            if (disjoint(DTi, Dz, i))
-                y.remove(i);
-        }
+        for (int i = 0; i < xSize; ++i) {
+            IntVar t = T[xDomain[i]];
+            int min = t.min();
+            int max = y.max();
 
-        // Remove v from D(z) if for all i in D(y), T[i] does not contain v.
-        for (int v : Dz) {
-            boolean remove = true;
-            for (int i : Dy) {
-                if (array[i].contains(v)) {
-                    remove = false;
-                    break;
-                }
+            if (min > max) {
+                x.remove(xDomain[i]);
             }
-            if (remove)
-                z.remove(v);
-        }
 
-        // If only one possible value is left for y, post equality constraint.
-        if (y.size() == 1)
-            getSolver().post(new Equal(array[y.min()], z));
-    }
+            min = y.min();
+            max = t.max();
 
-    public static boolean disjoint(int[] D1, int[] D2, int i) {
-        // If a residue has been assigned and is still valid, return false.
-        if (residueAssigned[i]) {
-            if (Arrays.binarySearch(D1, supportT[i]) >= 0 && Arrays.binarySearch(D2, supportT[i]) >= 0)
-                return false;
-            // If not, do not consider it anymore.
-            residueAssigned[i] = true;
-        }
-
-        HashSet<Integer> set = new HashSet<>();
-
-        // Add elements to the HashSet.
-        for (int a : D1)
-            set.add(a);
-
-        // Check if some element matches.
-        for (int b : D2) {
-            if (set.contains(b)) {
-                residueAssigned[i] = true;
-                supportT[i] = b;
-                return false;
+            if (min > max) {
+                x.remove(xDomain[i]);
             }
         }
 
-        // Otherwise return true.
-        return true;
+        if (xSize != x.size()) {
+            xSize = x.fillArray(xDomain);
+        }
+
+        int tMin = Integer.MAX_VALUE;
+        int tMax = Integer.MIN_VALUE;
+        for (int i = 0; i < xSize; ++i) {
+            IntVar t = T[xDomain[i]];
+            if (t.min() < tMin) {
+                tMin = t.min();
+            }
+
+            if (t.max() > tMax) {
+                tMax = t.max();
+            }
+        }
+
+        int yMin = Math.max(y.min(), tMin);
+        int yMax = Math.min(y.max(), tMax);
+
+        y.removeBelow(yMin);
+        y.removeAbove(yMax);
+
+
+        if (x.isBound()) {
+            IntVar t = T[x.min()];
+            y.removeBelow(Math.max(y.min(), t.min()));
+            y.removeAbove(Math.min(y.max(), t.max()));
+
+            t.removeBelow(Math.max(y.min(), t.min()));
+            t.removeAbove(Math.min(y.max(), t.max()));
+        }
+
     }
 }
