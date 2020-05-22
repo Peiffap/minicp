@@ -266,11 +266,14 @@ public class DialARide {
         int ns = 5;
 
         if (maxRouteDuration == 9000) {
-
+            dfs = Custom0.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
+            fL = 110;
+            pctg = 70;
+            ns = 15;
         } else if (maxRouteDuration == 48000) {
             dfs = Custom1.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
-            fL = 1000;
-            pctg = 35;
+            fL = 100;
+            pctg = 70;
             ns = 5;
         } else if (maxRouteDuration == 18000) {
 
@@ -523,7 +526,7 @@ public class DialARide {
 
         InputReader reader = null;
         if (args.length == 0) {
-            reader = new InputReader("data/dialaride/custom3");
+            reader = new InputReader("data/dialaride/custom1");
         } else {
             reader = new InputReader(args[0]);
         }
