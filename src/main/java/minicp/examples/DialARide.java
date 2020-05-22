@@ -2,14 +2,13 @@ package minicp.examples;
 
 import minicp.engine.constraints.Circuit;
 import minicp.engine.constraints.Element1D;
-import minicp.engine.constraints.Element1DVar;
 import minicp.engine.core.BoolVar;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
 import minicp.search.Objective;
+import minicp.search.SearchStatistics;
 import minicp.state.StateInt;
-import minicp.state.TrailInt;
 import minicp.util.Procedure;
 import minicp.util.io.InputReader;
 
@@ -19,7 +18,6 @@ import java.util.stream.IntStream;
 import static minicp.cp.BranchingScheme.*;
 import static minicp.cp.BranchingScheme.branch;
 import static minicp.cp.Factory.*;
-import static minicp.examples.MakeGraphFile.writeGraphFile;
 
 public class DialARide {
 
@@ -75,9 +73,13 @@ public class DialARide {
 
         // Compute distance matrix.
         int[][] distanceMatrix = new int[m][m];
+        int maxDistSucc = 0;
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < m; j++) {
                 distanceMatrix[i][j] = distance(allStops.get(i), allStops.get(j));
+                if (distanceMatrix[i][j] > maxDistSucc) {
+                    maxDistSucc = distanceMatrix[i][j];
+                }
             }
         }
 
@@ -91,15 +93,13 @@ public class DialARide {
         Solver cp = makeSolver(false);
         IntVar[] succ = makeIntVarArray(cp, m, m); // Successor array.
         IntVar[] prec = makeIntVarArray(cp, m, m); // Predecessor array.
-        IntVar[] distSucc = makeIntVarArray(cp, m, 10000); // Distance to successor.
-        IntVar[] distPrec = makeIntVarArray(cp, m, 10000); // Distance to predecessor.
-        IntVar[] distanceSinceDepot = makeIntVarArray(cp, m, 10000); // Distance since depot.
+        IntVar[] distSucc = makeIntVarArray(cp, m, maxDistSucc); // Distance to successor.
+        IntVar[] distPrec = makeIntVarArray(cp, m, maxDistSucc); // Distance to predecessor.
+        IntVar[] distanceSinceDepot = makeIntVarArray(cp, m, 30000); // Distance since depot.
         IntVar[] vehicles = makeIntVarArray(cp, m, k); // Truck serving a stop.
         IntVar[] load = makeIntVarArray(cp, m, vehicleCapacity+1); // Capacity at each stop.
-        IntVar[] totalDistance = makeIntVarArray(cp, m, 100000); // Monotonous distance.
 
         // Set variables at depots.
-        cp.post(equal(totalDistance[0], 0));
         for (int i = 0; i < k; i++) {
             cp.post(equal(vehicles[startDepots[i]], i)); // startDepots[i] is served by truck i.
             cp.post(equal(vehicles[endDepots[i]], i)); // endDepots[i] is served by truck i.
@@ -121,6 +121,46 @@ public class DialARide {
             cp.post(largerOrEqual(prec[endDepots[i]], tmp));
         }
 
+        /*for (int i = 0; i < m; i++) {
+            if (i >= 2*k || i % 2 == 0) {
+                int finalI = i;
+                succ[i].whenBind(() -> {
+                    ArrayList<Integer> possibilities = new ArrayList<>();
+                    ArrayList<Integer> drops = new ArrayList<>();
+                    int ctr = finalI;
+                    while (prec[ctr].isBound() && !(ctr < 2 * k && ctr % 2 == 0)) {
+                        if (ctr >= 2 * k + n) {
+                            drops.add(ctr);
+                        } else {
+                            possibilities.add(ctr + n);
+                        }
+                        ctr = prec[ctr].min();
+                    }
+
+                    if (possibilities.isEmpty() || succ[finalI].min() < 2*k+n) {
+                        possibilities.add(succ[finalI].min() + n);
+                    }
+
+                    ArrayList<Integer> available = new ArrayList<>();
+
+                    for (int j = 0; j < possibilities.size(); j++) {
+                        if (!drops.contains(possibilities.get(j))) {
+                            available.add(possibilities.get(j));
+                        }
+                    }
+
+                    IntVar ssi = succ[succ[finalI].min()];
+                    int[] tmp = new int[ssi.size()];
+                    ssi.fillArray(tmp);
+                    for (int j: tmp) {
+                        if (j >= 2 * k + n && !available.contains(j)) {
+                            cp.post(notEqual(ssi, j));
+                        }
+                    }
+                });
+            }
+        }*/
+
         // End depots go to start depots.
         cp.post(equal(succ[endDepots[k-1]], startDepots[0]));
         cp.post(equal(prec[startDepots[0]], endDepots[k-1]));
@@ -134,22 +174,6 @@ public class DialARide {
             for (int j = 0; j < k; j++) {
                 cp.post(notEqual(succ[i], endDepots[j])); // Pick up cannot be followed by end depot.
                 cp.post(notEqual(prec[n + i], startDepots[j])); // Drop cannot be preceded by start depot.
-            }
-        }
-
-        for (int i = 0; i < k-1; i++) {
-            cp.post(lessOrEqual(distanceSinceDepot[endDepots[i]], distanceSinceDepot[endDepots[i + 1]]));
-            cp.post(lessOrEqual(totalDistance[endDepots[i]], totalDistance[endDepots[i + 1]]));
-        }
-
-        for (int i = 0; i < m; i++) {
-            if (i != 2*k-1) {
-                IntVar tDsucc = elementVar(totalDistance, succ[i]);
-                cp.post(equal(tDsucc, sum(totalDistance[i], distSucc[i])));
-            }
-            if (i != 0) {
-                IntVar tDprec = elementVar(totalDistance, prec[i]);
-                cp.post(equal(totalDistance[i], sum(tDprec, distPrec[i])));
             }
         }
 
@@ -213,9 +237,8 @@ public class DialARide {
         }
 
         // Maximum route duration constraint.
-        cp.post(lessOrEqual(distanceSinceDepot[endDepots[k-1]], maxRouteDuration));
         for (int i = 0; i < m; i++) {
-            cp.post(lessOrEqual(distanceSinceDepot[i], distanceSinceDepot[endDepots[k-1]]));
+            cp.post(lessOrEqual(distanceSinceDepot[i], maxRouteDuration));
         }
 
         for (int i = 2*k; i < 2*k + n; i++) {
@@ -224,7 +247,6 @@ public class DialARide {
 
             // Time windows.
             cp.post(lessOrEqual(plus(distanceSinceDepot[i], distanceMatrix[i][n+i]), distanceSinceDepot[n+i])); // Pick up before drop.
-            cp.post(lessOrEqual(plus(totalDistance[i], distanceMatrix[i][n+i]), totalDistance[n+i])); // Pick up before drop.
             cp.post(lessOrEqual(distanceSinceDepot[i], pickupRideStops.get(i - 2*k).window_end)); // Pick up before deadline.
             cp.post(lessOrEqual(distanceSinceDepot[i + n], dropRideStops.get(i - 2*k).window_end)); // Drop before deadline.
         }
@@ -241,7 +263,7 @@ public class DialARide {
         }
 
         // Objective: minimize total distance.
-        Objective obj = cp.minimize(totalDistance[endDepots[k-1]]);
+        Objective obj = cp.minimize(sum(distSucc));
 
         /*DFSearch dfs = makeDfs(cp, () -> {
             // Variable selection.
@@ -306,7 +328,7 @@ public class DialARide {
             ArrayList<Integer> partialRoute = new ArrayList<>();
             int ctr = bestIndex;
             while (prec[ctr].isBound() && !(ctr < 2*k && ctr % 2 == 0)) {
-                partialRoute.add(prec[ctr].min());
+                partialRoute.add(ctr);
                 ctr = prec[ctr].min();
             }
 
@@ -345,7 +367,7 @@ public class DialARide {
                         }
                     }
                     if (ps.isEmpty() || r.nextInt(100) < 10) {
-                        val = currentDepot + 1;
+                        val = succ[bestIndex].min();
                     } else {
                         int lowestIndex = 0;
                         int minDistance = Integer.MAX_VALUE;
@@ -358,7 +380,7 @@ public class DialARide {
                         val = lowestIndex;
                     }
                 } else {
-                    int lowestIndex = 0;
+                    int lowestIndex = -1;
                     int minDistance = Integer.MAX_VALUE;
                     for (int i = 0; i < available.size(); i++) {
                         if (distanceMatrix[bestIndex][available.get(i)] < minDistance) {
@@ -373,6 +395,79 @@ public class DialARide {
             int finalVal = val;
             return branch(() -> succ[finalBestIndex].getSolver().post(equal(succ[finalBestIndex], finalVal)),
                     () -> succ[finalBestIndex].getSolver().post(notEqual(succ[finalBestIndex], finalVal)));
+        });*/
+
+        /*DFSearch dfs = makeDfs(cp, () -> {
+            IntVar xs = null;
+            int score = m;
+            int val = 0;
+            for (int i = 0; i < m; i++) {
+                if (!succ[i].isBound() && prec[i].isBound()) {
+                    if (succ[i].size() < score) {
+                        score = succ[i].size();
+                        xs = succ[i];
+                        val = i;
+                    }
+                }
+            }
+
+            if (xs == null) {
+                return EMPTY;
+            }
+
+            int[] dom = new int[xs.size()];
+            xs.fillArray(dom);
+            ArrayList<Integer> availableDrops = new ArrayList<>();
+            for (int i = 0; i < dom.length; i++) {
+                if (dom[i] >= 2*k + n && prec[dom[i]-n].isBound()) {
+                    availableDrops.add(dom[i]);
+                }
+            }
+
+            int index = xs.min();
+            if (availableDrops.isEmpty() || maxRouteDuration - distanceSinceDepot[val].min() < 1000) {
+                ArrayList<Integer> availablePicks = new ArrayList<>();
+                for (int i = 0; i < dom.length; i++) {
+                    if (dom[i] >= 2*k && dom[i] < 2*k+n) {
+                        availablePicks.add(dom[i]);
+                    }
+                }
+                if (availablePicks.isEmpty() || maxRouteDuration - distanceSinceDepot[val].min() < 1000) {
+                    index = xs.min();
+                } else {
+                    int min = Integer.MAX_VALUE;
+                    for (Integer availablePick : availablePicks) {
+                        int metric =
+                                distanceMatrix[val][availablePick];// + distanceMatrix[availablePick][availablePick + n];
+                        //allStops.get(availablePick + n).window_end;
+                        if (metric < min) {
+                            min = metric;
+                            index = availablePick;
+                        }
+                    }
+                }
+            } else {
+                int min = Integer.MAX_VALUE;
+                for (Integer availableDrop : availableDrops) {
+                    if (allStops.get(availableDrop).window_end - distanceSinceDepot[val].min() < 2 * distanceMatrix[availableDrop][val]) {
+                        index = availableDrop;
+                        break;
+                    }
+                    int metric =
+                            distanceMatrix[val][availableDrop];
+                            //Math.min(allStops.get(availableDrop).window_end - distanceSinceDepot[availableDrop - n].min(),
+                            //maxRideTime - (distanceSinceDepot[val].min() - distanceSinceDepot[availableDrop - n].min()));
+                    if (metric < min) {
+                        min = metric;
+                        index = availableDrop;
+                    }
+                }
+            }
+
+            IntVar x = xs;
+            int v = index;
+            return branch(() -> x.getSolver().post(equal(x, v)),
+                    () -> x.getSolver().post(notEqual(x, v)));
         });*/
 
         StateInt currentIndex = cp.getStateManager().makeStateInt(0);
@@ -493,25 +588,28 @@ public class DialARide {
             }
         });
 
-        dfs.solve(statistics -> {
+        SearchStatistics stats = dfs.solve(statistics -> {
             return statistics.numberOfSolutions() > 0;
         });
+
+        System.out.println(stats);
 
         int nRestarts = 1000000000;
         int failureLimit = 1000;
         Random rand = new java.util.Random(0);
 
         for (int i = 0; i < nRestarts; i++) {
-            dfs.optimizeSubjectTo(obj, statistics -> statistics.numberOfFailures() >= failureLimit, () -> {
+            dfs.optimizeSubjectTo(obj, statistics -> {
+                return statistics.numberOfFailures() >= failureLimit;
+            }, () -> {
                 // Assign the fragment 5% of the variables randomly chosen
                 for (int j = 0; j < m; j++) {
-                    if (rand.nextInt(100) < 5) {
+                    if ((j < 2*k && j % 2 == 1) || rand.nextInt(100) < 35) {
                         // after the solveSubjectTo those constraints are removed
                         cp.post(equal(succ[j], xBest[j]));
                     }
                 }
             });
-
         }
 
         return null;
@@ -691,7 +789,7 @@ public class DialARide {
         // Reading the data
 
         //TODO change file to test the various instances.
-        InputReader reader = new InputReader("data/dialaride/custom0");
+        InputReader reader = new InputReader("data/dialaride/custom1");
 
         int nVehicles = reader.getInt();
         reader.getInt(); //ignore
