@@ -265,304 +265,56 @@ public class DialARide {
         // Objective: minimize total distance.
         Objective obj = cp.minimize(sum(distSucc));
 
-        /*DFSearch dfs = makeDfs(cp, () -> {
-            // Variable selection.
-            int minimalSize = m;
-            for (int i = 0; i < succ.length; i++) {
-                IntVar xi = succ[i];
-                if (!xi.isBound() && xi.size() < minimalSize) {
-                    minimalSize = xi.size();
-                }
-            }
-
-            if (minimalSize == m) {
-                return EMPTY;
-            }
-
-            ArrayList<Integer> s = new ArrayList<>();
-            for (int i = 0; i < succ.length; i++) {
-                IntVar xi = succ[i];
-                if (xi.size() == minimalSize) {
-                    s.add(i);
-                }
-            }
-
-            int bestIndex;
-            if (s.size() == 1) {
-                bestIndex = s.get(0);
-            } else {
-                HashMap<Integer, Integer> values = new HashMap<>();
-                for (int i = 0; i < s.size(); i++) {
-                    IntVar si = succ[s.get(i)];
-                    int[] tmp = new int[si.size()];
-                    si.fillArray(tmp);
-                    for (int val: tmp) {
-                        if (values.get(val) == null) {
-                            values.put(val, 1);
-                        } else {
-                            int curr = values.get(val);
-                            values.put(val, curr + 1);
-                        }
-                    }
-                }
-
-                int[] score = new int[s.size()];
-                int max = 0;
-                int index = 0;
-                for (int i = 0; i < score.length; i++) {
-                    IntVar si = succ[s.get(i)];
-                    int[] tmp = new int[si.size()];
-                    si.fillArray(tmp);
-                    for (int val: tmp) {
-                        score[i] += values.get(val);
-                    }
-                    if (score[i] > max) {
-                        index = s.get(i);
-                        max = score[i];
-                    }
-                }
-                bestIndex = index;
-            }
-
-            // Value selection.
-            ArrayList<Integer> partialRoute = new ArrayList<>();
-            int ctr = bestIndex;
-            while (prec[ctr].isBound() && !(ctr < 2*k && ctr % 2 == 0)) {
-                partialRoute.add(ctr);
-                ctr = prec[ctr].min();
-            }
-
-            int val;
-            if (partialRoute.isEmpty()) {
-                val = succ[bestIndex].min();
-            } else {
-                ArrayList<Integer> pickups = new ArrayList<>();
-                ArrayList<Integer> drops = new ArrayList<>();
-                int currentDepot = -1;
-                for (int i: partialRoute) {
-                    if (i < 2*k) {
-                        currentDepot = i;
-                    } else if (i < 2*k+n) {
-                        pickups.add(i);
-                    } else {
-                        drops.add(i);
-                    }
-                }
-
-                ArrayList<Integer> available = new ArrayList<>();
-                for (int i: pickups) {
-                    if (!drops.contains(i + n)) {
-                        available.add(i + n);
-                    }
-                }
-
-                Random r = new java.util.Random();
-                if (available.isEmpty() || r.nextInt(100) < 30) {
-                    ArrayList<Integer> ps = new ArrayList<>();
-                    int[] tmp = new int[succ[bestIndex].size()];
-                    succ[bestIndex].fillArray(tmp);
-                    for (int i: tmp) {
-                        if (i >= 2*k && i <= 2*k+n) {
-                            ps.add(i);
-                        }
-                    }
-                    if (ps.isEmpty() || r.nextInt(100) < 10) {
-                        val = succ[bestIndex].min();
-                    } else {
-                        int lowestIndex = 0;
-                        int minDistance = Integer.MAX_VALUE;
-                        for (int i = 0; i < ps.size(); i++) {
-                            if (distanceMatrix[bestIndex][ps.get(i)] < minDistance) {
-                                minDistance = distanceMatrix[bestIndex][ps.get(i)];
-                                lowestIndex = ps.get(i);
-                            }
-                        }
-                        val = lowestIndex;
-                    }
-                } else {
-                    int lowestIndex = -1;
-                    int minDistance = Integer.MAX_VALUE;
-                    for (int i = 0; i < available.size(); i++) {
-                        if (distanceMatrix[bestIndex][available.get(i)] < minDistance) {
-                            minDistance = distanceMatrix[bestIndex][available.get(i)];
-                            lowestIndex = available.get(i);
-                        }
-                    }
-                    val = lowestIndex;
-                }
-            }
-            int finalBestIndex = bestIndex;
-            int finalVal = val;
-            return branch(() -> succ[finalBestIndex].getSolver().post(equal(succ[finalBestIndex], finalVal)),
-                    () -> succ[finalBestIndex].getSolver().post(notEqual(succ[finalBestIndex], finalVal)));
-        });*/
-
-        /*DFSearch dfs = makeDfs(cp, () -> {
-            IntVar xs = null;
-            int score = m;
-            int val = 0;
-            for (int i = 0; i < m; i++) {
-                if (!succ[i].isBound() && prec[i].isBound()) {
-                    if (succ[i].size() < score) {
-                        score = succ[i].size();
-                        xs = succ[i];
-                        val = i;
-                    }
-                }
-            }
-
-            if (xs == null) {
-                return EMPTY;
-            }
-
-            int[] dom = new int[xs.size()];
-            xs.fillArray(dom);
-            ArrayList<Integer> availableDrops = new ArrayList<>();
-            for (int i = 0; i < dom.length; i++) {
-                if (dom[i] >= 2*k + n && prec[dom[i]-n].isBound()) {
-                    availableDrops.add(dom[i]);
-                }
-            }
-
-            int index = xs.min();
-            if (availableDrops.isEmpty() || maxRouteDuration - distanceSinceDepot[val].min() < 1000) {
-                ArrayList<Integer> availablePicks = new ArrayList<>();
-                for (int i = 0; i < dom.length; i++) {
-                    if (dom[i] >= 2*k && dom[i] < 2*k+n) {
-                        availablePicks.add(dom[i]);
-                    }
-                }
-                if (availablePicks.isEmpty() || maxRouteDuration - distanceSinceDepot[val].min() < 1000) {
-                    index = xs.min();
-                } else {
-                    int min = Integer.MAX_VALUE;
-                    for (Integer availablePick : availablePicks) {
-                        int metric =
-                                distanceMatrix[val][availablePick];// + distanceMatrix[availablePick][availablePick + n];
-                        //allStops.get(availablePick + n).window_end;
-                        if (metric < min) {
-                            min = metric;
-                            index = availablePick;
-                        }
-                    }
-                }
-            } else {
-                int min = Integer.MAX_VALUE;
-                for (Integer availableDrop : availableDrops) {
-                    if (allStops.get(availableDrop).window_end - distanceSinceDepot[val].min() < 2 * distanceMatrix[availableDrop][val]) {
-                        index = availableDrop;
-                        break;
-                    }
-                    int metric =
-                            distanceMatrix[val][availableDrop];
-                            //Math.min(allStops.get(availableDrop).window_end - distanceSinceDepot[availableDrop - n].min(),
-                            //maxRideTime - (distanceSinceDepot[val].min() - distanceSinceDepot[availableDrop - n].min()));
-                    if (metric < min) {
-                        min = metric;
-                        index = availableDrop;
-                    }
-                }
-            }
-
-            IntVar x = xs;
-            int v = index;
-            return branch(() -> x.getSolver().post(equal(x, v)),
-                    () -> x.getSolver().post(notEqual(x, v)));
-        });*/
-
-        StateInt currentIndex = cp.getStateManager().makeStateInt(0);
-        StateInt currentVehicle = cp.getStateManager().makeStateInt(0);
-
         DFSearch dfs = makeDfs(cp, () -> {
-            // Check if all done
-            boolean allBound = true;
-            for (int i = 0; i < m; i++) {
-                if (!succ[i].isBound()) {
-                    allBound = false;
-                    break;
+            int var = 0;
+            while (succ[var].isBound()) {
+                var = succ[var].min();
+                if (var == 0) {
+                    return EMPTY;
                 }
             }
-            if (allBound) {
-                return EMPTY;
-            }
 
-            IntVar var = succ[currentIndex.value()]; // Variable we branch on
-            // if (var.isBound()) { System.out.println("Not normal " + previousIndex.value()); }
+            int[] dom = new int[succ[var].size()];
+            succ[var].fillArray(dom);
 
-            int[] domI = new int[var.size()];
-            var.fillArray(domI);
+            int bestPick = -1;
+            int bestDrop = -1;
+            int bPickMetric = Integer.MAX_VALUE;
+            int bDropMetric = Integer.MAX_VALUE;
 
-            // We have the variable: it is the successor of the
-            // variable previously bound in the search
-            // Now we branch on the values
-            // First branch is the drop of someone previously picked up
-
-            int nearestDrop = -1;
-            int dropDist = Integer.MAX_VALUE;
-            int nearestPick = -1;
-            int pickDist = Integer.MAX_VALUE;
-            for (int i: domI) {
-                if (i >= 2*k + n) { // Drop node
-                    // Or check if exists j: succ[j] is bound to i-m
-                    IntVar successorOfPicked = succ[i - n];
-                    if (successorOfPicked == var || successorOfPicked.isBound()) {
-                        // Picked up but not dropped
-                        if (distanceMatrix[currentIndex.value()][i] < dropDist) {
-                            dropDist = distanceMatrix[currentIndex.value()][i];
-                            nearestDrop = i;
+            for (int d: dom) {
+                char t = stopType(d, n, k);
+                if (t == 'd') {
+                    IntVar corresponding = succ[d - n];
+                    if (corresponding == succ[var] || corresponding.isBound()) {
+                        int metric = distanceMatrix[var][d];
+                        if (metric < bDropMetric) {
+                            bDropMetric = metric;
+                            bestDrop = d;
                         }
                     }
-                } else if (i >= 2*k) { // Pick up node
-                    if (distanceMatrix[currentIndex.value()][i] < pickDist) {
-                        pickDist = distanceMatrix[currentIndex.value()][i];
-                        nearestPick = i;
+                } else if (t == 'p') {
+                    int metric = distanceMatrix[var][d] + distanceMatrix[d][d + n];
+                    if (metric < bPickMetric) {
+                        bPickMetric = metric;
+                        bestPick = d;
                     }
                 }
             }
-            //System.out.println( "nbPeople = " + nbPeople[currentIndex.value()]);
-            if (nearestDrop != -1) {
-                final int candidate = nearestDrop;
-                //System.out.println("drop " + previousIndex.value() + " " + currentIndex.value() + " " + candidate);
-                Procedure p1 = () -> {
-                    currentIndex.setValue(candidate);
-                    cp.post(equal(var, candidate));
-                };
-                return branch(p1, () -> {
-                    cp.post(notEqual(var, candidate));
-                });
+
+            IntVar finalVar = succ[var];
+            int v = finalVar.min();
+            if (bestDrop != -1) {
+                v = bestDrop;
+            } else if (bestPick != -1 && bPickMetric <= maxRouteDuration - distanceSinceDepot[var].min()) {
+                v = bestPick;
             }
-            if (nearestPick != -1) {
-                final int nearestFinal = nearestPick;
-                //System.out.println("pick " + previousIndex.value() + " " + currentIndex.value() + " " + nearestFinal);
-                Procedure p2 = () -> {
-                    currentIndex.setValue(nearestFinal);
-                    cp.post(equal(var, nearestFinal));
-                };
-                return branch(p2, () -> {
-                    cp.post(notEqual(var, nearestFinal));
-                });
-            }
-            // Else: take min value
-            final int v = var.min();
-            if (v < 2*k) {
-                return branch(() -> {
-                    //System.out.println("else " + previousIndex.value() + " " + currentIndex.value() + " " + v);
-                    currentIndex.setValue(v);
-                    currentVehicle.increment();
-                    cp.post(equal(var, v));
-                }, () -> {
-                    cp.post(notEqual(var, v));
-                });
-            }
-            return branch(() -> {
-                //System.out.println("else " + previousIndex.value() + " " + currentIndex.value() + " " + v);
-                currentIndex.setValue(v);
-                cp.post(equal(var, v));
-            }, () -> {
-                cp.post(notEqual(var, v));
-            });
+
+            int finalVal = v;
+
+            return branch(() -> cp.post(equal(finalVar, finalVal)),
+                    () -> cp.post(notEqual(finalVar, finalVal)));
         });
-        //DFSearch dfs = makeDfs(cp, firstFail(succ));
 
         int[] xBest = IntStream.range(0, m).toArray();
         dfs.onSolution(() -> {
@@ -586,10 +338,11 @@ public class DialARide {
             for (int j = 0; j < m; j++) {
                 xBest[j] = succ[j].min();
             }
+
         });
 
-        SearchStatistics stats = dfs.solve(statistics -> {
-            return statistics.numberOfSolutions() > 0;
+        SearchStatistics stats = dfs.optimize(obj, statistics -> {
+            return statistics.numberOfSolutions() > 5;
         });
 
         System.out.println(stats);
@@ -626,6 +379,16 @@ public class DialARide {
     public static void print(ArrayList<RideStop> a) {
         for (RideStop rs: a) {
             System.out.println(rs.window_end);
+        }
+    }
+
+    public static char stopType(int i, int n, int k) {
+        if (i < 2*k) {
+            return i % 2 == 0 ? 's' : 'e';
+        } else if (i < 2*k + n) {
+            return 'p';
+        } else {
+            return 'd';
         }
     }
 
