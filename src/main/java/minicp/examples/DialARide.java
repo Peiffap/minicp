@@ -276,11 +276,14 @@ public class DialARide {
             pctg = 70;
             ns = 5;
         } else if (maxRouteDuration == 18000) {
-
+            dfs = Custom2.custom(cp, succ, prec, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot, allStops);
+            fL = 110;
+            pctg = 70;
+            ns = 15;
         } else {
             dfs = Custom3.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
-            fL = 100;
-            pctg = 60;
+            fL = 50;
+            pctg = 80;
             ns = 15;
         }
 
@@ -310,7 +313,6 @@ public class DialARide {
             for (int j = 0; j < m; j++) {
                 xBest[j] = succ[j].min();
             }
-
         });
 
         SearchStatistics stats = dfs.optimize(obj, statistics -> {
@@ -526,7 +528,7 @@ public class DialARide {
 
         InputReader reader = null;
         if (args.length == 0) {
-            reader = new InputReader("data/dialaride/custom1");
+            reader = new InputReader("data/dialaride/custom3");
         } else {
             reader = new InputReader(args[0]);
         }
