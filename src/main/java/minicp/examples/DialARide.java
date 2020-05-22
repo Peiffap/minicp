@@ -264,6 +264,7 @@ public class DialARide {
         int pctg = 5;
         int fL = 1000;
         int ns = 5;
+        int[] xBest = IntStream.range(0, m).toArray();
 
         if (maxRouteDuration == 9000) {
             dfs = Custom0.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
@@ -277,9 +278,10 @@ public class DialARide {
             ns = 5;
         } else if (maxRouteDuration == 18000) {
             dfs = Custom2.custom(cp, succ, prec, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot, allStops, vehicles);
-            fL = 100;
-            pctg = 85;
-            ns = 0;
+            fL = 500;
+            pctg = 75;
+            ns = -1;
+            xBest = new int[]{16, 2, 23, 4, 36, 6, 31, 0, 30, 45, 63, 26, 70, 49, 54, 41, 8, 25, 14, 51, 68, 28, 52, 39, 66, 27, 18, 38, 79, 58, 24, 15, 43, 50, 17, 59, 42, 73, 53, 32, 13, 77, 9, 21, 65, 78, 74, 3, 19, 37, 56, 10, 29, 12, 71, 7, 62, 64, 44, 11, 22, 46, 69, 61, 35, 1, 60, 34, 75, 47, 48, 33, 40, 76, 55, 57, 5, 67, 72, 20};
         } else {
             dfs = Custom3.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
             fL = 50;
@@ -291,7 +293,7 @@ public class DialARide {
         final int percentage = pctg;
         final int numberSols = ns;
 
-        int[] xBest = IntStream.range(0, m).toArray();
+        int[] finalXBest = xBest;
         dfs.onSolution(() -> {
             DialARideSolution solution = new DialARideSolution(nVehicles, pickupRideStops, dropRideStops, depot, vehicleCapacity, maxRideTime, maxRouteDuration);
             int i = succ[0].min();
@@ -311,7 +313,7 @@ public class DialARide {
             System.out.println(solution);
 
             for (int j = 0; j < m; j++) {
-                xBest[j] = succ[j].min();
+                finalXBest[j] = succ[j].min();
             }
         });
 
@@ -332,13 +334,13 @@ public class DialARide {
                 for (int j = 0; j < k; j++) {
                     if (rand.nextInt(100) < percentage) {
                         // after the solveSubjectTo those constraints are removed
-                        cp.post(equal(succ[endDepots[j]], xBest[endDepots[j]]));
+                        cp.post(equal(succ[endDepots[j]], finalXBest[endDepots[j]]));
                     }
                 }
                 for (int j = 2*k; j < m; j++) {
                     if (rand.nextInt(100) < percentage) {
                         // after the solveSubjectTo those constraints are removed
-                        cp.post(equal(succ[j], xBest[j]));
+                        cp.post(equal(succ[j], finalXBest[j]));
                     }
                 }
             });
