@@ -95,7 +95,7 @@ public class DialARide {
         IntVar[] prec = makeIntVarArray(cp, m, m); // Predecessor array.
         IntVar[] distSucc = makeIntVarArray(cp, m, maxDistSucc); // Distance to successor.
         IntVar[] distPrec = makeIntVarArray(cp, m, maxDistSucc); // Distance to predecessor.
-        IntVar[] distanceSinceDepot = makeIntVarArray(cp, m, 30000); // Distance since depot.
+        IntVar[] distanceSinceDepot = makeIntVarArray(cp, m, maxRouteDuration+1); // Distance since depot.
         IntVar[] vehicles = makeIntVarArray(cp, m, k); // Truck serving a stop.
         IntVar[] load = makeIntVarArray(cp, m, vehicleCapacity+1); // Capacity at each stop.
 
@@ -236,11 +236,6 @@ public class DialARide {
             cp.post(equal(vehicles[i], elementVar(vehicles, prec[i])));
         }
 
-        // Maximum route duration constraint.
-        for (int i = 0; i < m; i++) {
-            cp.post(lessOrEqual(distanceSinceDepot[i], maxRouteDuration));
-        }
-
         for (int i = 2*k; i < 2*k + n; i++) {
             // Maximum ride time constraint.
             cp.post(lessOrEqual(sum(distanceSinceDepot[i + n], minus(distanceSinceDepot[i])), maxRideTime));
@@ -265,56 +260,30 @@ public class DialARide {
         // Objective: minimize total distance.
         Objective obj = cp.minimize(sum(distSucc));
 
-        DFSearch dfs = makeDfs(cp, () -> {
-            int var = 0;
-            while (succ[var].isBound()) {
-                var = succ[var].min();
-                if (var == 0) {
-                    return EMPTY;
-                }
-            }
+        DFSearch dfs = null;
+        int pctg = 5;
+        int fL = 1000;
+        int ns = 5;
 
-            int[] dom = new int[succ[var].size()];
-            succ[var].fillArray(dom);
+        if (maxRouteDuration == 9000) {
 
-            int bestPick = -1;
-            int bestDrop = -1;
-            int bPickMetric = Integer.MAX_VALUE;
-            int bDropMetric = Integer.MAX_VALUE;
+        } else if (maxRouteDuration == 48000) {
+            dfs = Custom1.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
+            fL = 1000;
+            pctg = 35;
+            ns = 5;
+        } else if (maxRouteDuration == 18000) {
 
-            for (int d: dom) {
-                char t = stopType(d, n, k);
-                if (t == 'd') {
-                    IntVar corresponding = succ[d - n];
-                    if (corresponding == succ[var] || corresponding.isBound()) {
-                        int metric = distanceMatrix[var][d];
-                        if (metric < bDropMetric) {
-                            bDropMetric = metric;
-                            bestDrop = d;
-                        }
-                    }
-                } else if (t == 'p') {
-                    int metric = distanceMatrix[var][d] + distanceMatrix[d][d + n];
-                    if (metric < bPickMetric) {
-                        bPickMetric = metric;
-                        bestPick = d;
-                    }
-                }
-            }
+        } else {
+            dfs = Custom3.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
+            fL = 100;
+            pctg = 60;
+            ns = 15;
+        }
 
-            IntVar finalVar = succ[var];
-            int v = finalVar.min();
-            if (bestDrop != -1) {
-                v = bestDrop;
-            } else if (bestPick != -1 && bPickMetric <= maxRouteDuration - distanceSinceDepot[var].min()) {
-                v = bestPick;
-            }
-
-            int finalVal = v;
-
-            return branch(() -> cp.post(equal(finalVar, finalVal)),
-                    () -> cp.post(notEqual(finalVar, finalVal)));
-        });
+        final int failureLimit = fL;
+        final int percentage = pctg;
+        final int numberSols = ns;
 
         int[] xBest = IntStream.range(0, m).toArray();
         dfs.onSolution(() -> {
@@ -342,13 +311,12 @@ public class DialARide {
         });
 
         SearchStatistics stats = dfs.optimize(obj, statistics -> {
-            return statistics.numberOfSolutions() > 5;
+            return statistics.numberOfSolutions() > numberSols;
         });
 
         System.out.println(stats);
 
         int nRestarts = 1000000000;
-        int failureLimit = 1000;
         Random rand = new java.util.Random(0);
 
         for (int i = 0; i < nRestarts; i++) {
@@ -356,8 +324,8 @@ public class DialARide {
                 return statistics.numberOfFailures() >= failureLimit;
             }, () -> {
                 // Assign the fragment 5% of the variables randomly chosen
-                for (int j = 0; j < m; j++) {
-                    if ((j < 2*k && j % 2 == 1) || rand.nextInt(100) < 35) {
+                for (int j = 2*k; j < m; j++) {
+                    if (rand.nextInt(100) < percentage) {
                         // after the solveSubjectTo those constraints are removed
                         cp.post(equal(succ[j], xBest[j]));
                     }
@@ -552,7 +520,7 @@ public class DialARide {
         // Reading the data
 
         //TODO change file to test the various instances.
-        InputReader reader = new InputReader("data/dialaride/custom1");
+        InputReader reader = new InputReader("data/dialaride/custom3");
 
         int nVehicles = reader.getInt();
         reader.getInt(); //ignore
