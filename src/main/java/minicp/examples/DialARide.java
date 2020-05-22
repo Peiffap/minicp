@@ -520,7 +520,13 @@ public class DialARide {
         // Reading the data
 
         //TODO change file to test the various instances.
-        InputReader reader = new InputReader("data/dialaride/custom3");
+
+        InputReader reader = null;
+        if (args.length == 0) {
+            reader = new InputReader("data/dialaride/custom3");
+        } else {
+            reader = new InputReader(args[0]);
+        }
 
         int nVehicles = reader.getInt();
         reader.getInt(); //ignore
