@@ -41,7 +41,7 @@ public class Custom1 {
                         }
                     }
                 } else if (t == 'p') {
-                    int metric = distanceMatrix[var][d] + distanceMatrix[d][d + n];
+                    int metric = distanceMatrix[var][d];
                     if (metric < bPickMetric) {
                         bPickMetric = metric;
                         bestPick = d;

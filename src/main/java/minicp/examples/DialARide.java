@@ -269,17 +269,17 @@ public class DialARide {
             dfs = Custom0.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
             fL = 110;
             pctg = 70;
-            ns = 15;
+            ns = 5;
         } else if (maxRouteDuration == 48000) {
             dfs = Custom1.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
             fL = 100;
             pctg = 70;
             ns = 5;
         } else if (maxRouteDuration == 18000) {
-            dfs = Custom2.custom(cp, succ, prec, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot, allStops);
-            fL = 110;
-            pctg = 70;
-            ns = 15;
+            dfs = Custom2.custom(cp, succ, prec, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot, allStops, vehicles);
+            fL = 100;
+            pctg = 85;
+            ns = 0;
         } else {
             dfs = Custom3.custom(cp, succ, n, k, distanceMatrix, maxRouteDuration, distanceSinceDepot);
             fL = 50;
@@ -329,6 +329,12 @@ public class DialARide {
                 return statistics.numberOfFailures() >= failureLimit;
             }, () -> {
                 // Assign the fragment 5% of the variables randomly chosen
+                for (int j = 0; j < k; j++) {
+                    if (rand.nextInt(100) < percentage) {
+                        // after the solveSubjectTo those constraints are removed
+                        cp.post(equal(succ[endDepots[j]], xBest[endDepots[j]]));
+                    }
+                }
                 for (int j = 2*k; j < m; j++) {
                     if (rand.nextInt(100) < percentage) {
                         // after the solveSubjectTo those constraints are removed
@@ -528,7 +534,7 @@ public class DialARide {
 
         InputReader reader = null;
         if (args.length == 0) {
-            reader = new InputReader("data/dialaride/custom3");
+            reader = new InputReader("data/dialaride/custom2");
         } else {
             reader = new InputReader(args[0]);
         }
